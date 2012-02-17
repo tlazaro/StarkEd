@@ -2,19 +2,24 @@ package com.belfrygames.mapfiletype;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.lwjgl.LwjglApp;
+import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl.LwjglMultiCanvas;
+import com.sun.org.apache.bcel.internal.classfile.Code;
 import java.awt.*;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
+import org.lwjgl.LWJGLException;
+import org.lwjgl.opengl.AWTGLCanvas2;
 import org.netbeans.core.spi.multiview.CloseOperationState;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.MultiViewElementCallback;
 import org.openide.awt.UndoRedo;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
-
 
 @MultiViewElement.Registration(displayName = "#LBL_MapFile_VISUAL2",
 iconBase = "com/belfrygames/mapfiletype/iron_throne_cropped_normal.png",
@@ -39,29 +44,55 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
     public String getName() {
         return "MapFileVisualElement2";
     }
-    private Canvas canvas;
+    private AWTGLCanvas2 canvas;
     private JPanel panel;
-    private static LwjglApp app;
-    
+    private static LwjglMultiCanvas app;
+
     @Override
     public JComponent getVisualRepresentation() {
         if (panel == null) {
             panel = new JPanel();
             panel.setLayout(new BorderLayout(0, 0));
         }
-        
+
         if (app == null) {
-            app = new LwjglApp(new EditorApp(com.badlogic.gdx.graphics.Color.CYAN, new ApplicationListenerImpl()), false);
-            canvas = app.getCanvases().get(0);
-            panel.add(canvas, BorderLayout.CENTER);
-        } else if (canvas == null) {
-            canvas = app.addListener(new EditorApp(com.badlogic.gdx.graphics.Color.MAGENTA, new ApplicationListenerImpl()));
-            panel.add(canvas, BorderLayout.CENTER);
+            LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+            config.useGL20 = false;
+            config.resizable = true;
+            app = new LwjglMultiCanvas(null, config);
         }
 
-//        System.out.println("OBJ: " + obj);
-//        System.out.println("Width: " + canvas.getWidth() + " height: " + canvas.getHeight());
-//        System.out.println("X: " + canvas.getX() + " Y: " + canvas.getY());
+        if (canvas == null) {
+            try {
+                canvas = new AWTGLCanvas2() {
+
+                    boolean added = false;
+
+                    @Override
+                    public void addNotify() {
+                        super.addNotify();
+                        added = true;
+                    }
+
+                    @Override
+                    public void removeNotify() {
+                        super.removeNotify();
+                        if (added) {
+                            added = false;
+                            app.removeCanvas(this);
+                            panel.remove(this);
+                            canvas = null;
+                            System.out.println("Removed canvas");
+                        }
+                    }
+                };
+            } catch (LWJGLException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+            app.addCanvas(canvas, new EditorApp(com.badlogic.gdx.graphics.Color.MAGENTA));
+            panel.add(canvas, BorderLayout.CENTER);
+            panel.repaint();
+        }
 
         return panel;
     }
@@ -118,44 +149,5 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
     @Override
     public CloseOperationState canCloseElement() {
         return CloseOperationState.STATE_OK;
-    }
-
-    class ApplicationListenerImpl implements ApplicationListener {
-
-        public ApplicationListenerImpl() {
-        }
-
-        @Override
-        public void create() {
-            System.out.println("Created");
-        }
-
-        @Override
-        public void resize(int width, int height) {
-            System.out.println("Resize to: " + width + "," + height);
-        }
-
-        @Override
-        public void render() {
-        }
-
-        @Override
-        public void pause() {
-            System.out.println("Pause");
-        }
-
-        @Override
-        public void resume() {
-            System.out.println("Resume");
-        }
-
-        @Override
-        public void dispose() {
-            System.out.println("Destroying canvas");
-            if (panel != null) {
-                panel.remove(canvas);
-            }
-            canvas = null;
-        }
     }
 }
