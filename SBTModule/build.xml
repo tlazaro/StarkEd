@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See harness/README in the NetBeans platform -->
+<!-- for some information on what you could do (e.g. targets to override). -->
+<!-- If you delete this file and reopen the project it will be recreated. -->
+<project name="com.belfrygames.sbttest" default="netbeans" basedir=".">
+    <description>Builds, tests, and runs the project com.belfrygames.sbttest.</description>
+    <import file="nbproject/build-impl.xml"/>
+    
+    <target name="clean" description="Clean build products.">
+        <exec dir="${basedir}" executable="sbt">
+            <arg value=";clean"></arg>
+        </exec>
+    </target>
+
+    <target name="jar" description="Build JAR.">
+        <exec dir="${basedir}" executable="sbt">
+            <arg value=";package"></arg>
+        </exec>
+    </target>
+
+    <target name="compile" description="Compile project.">
+        <exec dir="${basedir}" executable="sbt">
+            <arg value=";compile"></arg>
+        </exec>
+    </target>
+
+    <target name="test" description="Run unit tests.">
+        <exec dir="${basedir}" executable="sbt">
+            <arg value=";test"></arg>
+        </exec>
+    </target>
+    
+    <target name="run-single">
+        <exec dir="${basedir}" executable="sbt">
+            <arg value="run-main ${run.class}"></arg>
+        </exec>        
+    </target>
+    
+    <target name="run" description="Run a main class.">
+        <echo>You must set the main class for the main 'run' task. Change Compile to Test to set it for 'test:run': 
+        mainClass in (Compile, run) := Some({main.class})
+        </echo>
+        <exec dir="${basedir}" executable="sbt">
+            <arg value=";run"></arg>
+        </exec>        
+    </target>       
+    
+    <target name="debug-single">
+        <echo>
+            Add -Xrunjdwp:transport=dt_socket,address={jpda.address} as an argument
+            to the SBT (specifying desired `jpda.address`), attach debugger and run the file.
+        </echo>
+    </target>    
+    
+    <target name="debug" description="Debug project in IDE.">
+        <echo>
+            Add -Xrunjdwp:transport=dt_socket,address={jpda.address} as an argument
+            to the SBT (specifying desired `jpda.address`), attach debugger and run the project.
+        </echo>        
+    </target>  
+    
+    <target name="-javadoc-build">
+        <exec dir="${basedir}" executable="sbt">
+            <arg value=";project common;package-doc"></arg>
+        </exec>        
+    </target>
+</project>

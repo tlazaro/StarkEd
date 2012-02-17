@@ -17,3 +17,8 @@
 .cache
 .project
 .classpath
+/SBTModule/target/
+/SBTModule/project/target/
+/SBTModule/nbproject/private/
+/MavenTest/target/
+/scala-library/build/
