@@ -4,12 +4,66 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
             <code-name-base>com.badlogic.gdx</code-name-base>
-            <standalone/>
+            <suite-component/>
             <module-dependencies/>
             <public-packages>
+                <package>com.badlogic.gdx</package>
+                <package>com.badlogic.gdx.assets</package>
+                <package>com.badlogic.gdx.assets.loaders</package>
+                <package>com.badlogic.gdx.assets.loaders.resolvers</package>
+                <package>com.badlogic.gdx.audio</package>
                 <package>com.badlogic.gdx.backends.lwjgl</package>
-                <package>com.belfrygames.editor</package>
+                <package>com.badlogic.gdx.backends.openal</package>
+                <package>com.badlogic.gdx.files</package>
+                <package>com.badlogic.gdx.graphics</package>
+                <package>com.badlogic.gdx.graphics.g2d</package>
+                <package>com.badlogic.gdx.graphics.g2d.tiled</package>
+                <package>com.badlogic.gdx.graphics.g3d</package>
+                <package>com.badlogic.gdx.graphics.g3d.decals</package>
+                <package>com.badlogic.gdx.graphics.g3d.keyframed</package>
+                <package>com.badlogic.gdx.graphics.g3d.loaders</package>
+                <package>com.badlogic.gdx.graphics.g3d.loaders.md5</package>
+                <package>com.badlogic.gdx.graphics.g3d.loaders.obj</package>
+                <package>com.badlogic.gdx.graphics.glutils</package>
+                <package>com.badlogic.gdx.input</package>
+                <package>com.badlogic.gdx.math</package>
+                <package>com.badlogic.gdx.math.collision</package>
+                <package>com.badlogic.gdx.physics.box2d</package>
+                <package>com.badlogic.gdx.physics.box2d.joints</package>
+                <package>com.badlogic.gdx.scenes.scene2d</package>
+                <package>com.badlogic.gdx.scenes.scene2d.actions</package>
+                <package>com.badlogic.gdx.scenes.scene2d.interpolators</package>
+                <package>com.badlogic.gdx.scenes.scene2d.ui</package>
+                <package>com.badlogic.gdx.scenes.scene2d.ui.tablelayout</package>
+                <package>com.badlogic.gdx.scenes.scene2d.ui.utils</package>
+                <package>com.badlogic.gdx.utils</package>
+                <package>com.esotericsoftware.tablelayout</package>
+                <package>com.jcraft.jogg</package>
+                <package>com.jcraft.jorbis</package>
+                <package>javazoom.jl.decoder</package>
+                <package>org.lwjgl</package>
+                <package>org.lwjgl.input</package>
+                <package>org.lwjgl.openal</package>
+                <package>org.lwjgl.opencl</package>
+                <package>org.lwjgl.opencl.api</package>
+                <package>org.lwjgl.opengl</package>
+                <package>org.lwjgl.opengles</package>
+                <package>org.lwjgl.util</package>
+                <package>org.lwjgl.util.glu</package>
+                <package>org.lwjgl.util.glu.tessellation</package>
+                <package>org.lwjgl.util.input</package>
+                <package>org.lwjgl.util.jinput</package>
+                <package>org.lwjgl.util.mapped</package>
+                <package>org.lwjgl.util.vector</package>
             </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/gdx-backend-lwjgl-natives.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/gdx-backend-lwjgl-natives.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/gdx-natives.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/gdx-natives.jar</binary-origin>
+            </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/gdx.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gdx.jar</binary-origin>

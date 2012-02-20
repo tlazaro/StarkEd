@@ -19,7 +19,6 @@ import java.util.*;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.AWTGLCanvas2;
 import org.lwjgl.opengl.GLContext;
-import org.openide.util.Exceptions;
 
 /**
  * An OpenGL surface on an AWT Canvas, allowing OpenGL to be embedded in a Swing application. All OpenGL calls are done on the EDT. This is slightly less
@@ -33,9 +32,9 @@ public class LwjglMultiCanvas implements Application {
     final LwjglGraphics2 graphics;
     final OpenALAudio audio;
     final LwjglFiles files;
-    final LwjglInput input;
+    final LwjglMultiCanvasInput input;
     final List<Runnable> runnables = new ArrayList<Runnable>();
-    final List<AWTCanvasContext> canvases = new ArrayList<AWTCanvasContext>();
+    final List<LwjglMultiCanvas.AWTCanvasContext> canvases = new ArrayList<LwjglMultiCanvas.AWTCanvasContext>();
     boolean running = true;
     int logLevel = LOG_INFO;
     Map<String, Preferences> preferences = new HashMap<String, Preferences>();
@@ -57,7 +56,7 @@ public class LwjglMultiCanvas implements Application {
         graphics = new LwjglGraphics2(config);
         audio = new OpenALAudio();
         files = new LwjglFiles();
-        input = new LwjglInput();
+        input = new LwjglMultiCanvasInput();
 
         Gdx.app = this;
         Gdx.graphics = graphics;
@@ -66,7 +65,7 @@ public class LwjglMultiCanvas implements Application {
         Gdx.input = input;
 
         if (listener != null) {
-            AWTCanvasContext context = new AWTCanvasContext();
+            LwjglMultiCanvas.AWTCanvasContext context = new LwjglMultiCanvas.AWTCanvasContext();
             context.width = config.width;
             context.height = config.height;
             context.canvas = null;
@@ -98,7 +97,7 @@ public class LwjglMultiCanvas implements Application {
                     graphics.updateTime();
 
                     synchronized (canvases) {
-                        for (AWTCanvasContext context : canvases) {
+                        for (LwjglMultiCanvas.AWTCanvasContext context : canvases) {
                             updateCanvas(context);
                         }
                     }
@@ -113,16 +112,16 @@ public class LwjglMultiCanvas implements Application {
         }, 100, 100);
     }
 
-    private void updateCanvas(AWTCanvasContext context) {
+    private void updateCanvas(LwjglMultiCanvas.AWTCanvasContext context) {
         // makes OpenGL context the one from current canvas
         if (context.canvas != null) {
             if (!graphics.setupCanvas(context.canvas)) {
                 return;
             }
-//            input.setCurrentCanvas(context.canvas); TODO
+            input.setCurrentCanvas(context.canvas);
         }
 
-//        input.processEvents();
+        input.processEvents();
 
         if (!context.initialized) {
             // initialize canvas sub-App
@@ -157,7 +156,7 @@ public class LwjglMultiCanvas implements Application {
                     }
 
                     context.canvas.updateContext();
-                    
+
                     int width = context.canvas.getWidth();
                     int height = context.canvas.getHeight();
                     if (context.width != width || context.height != height) {
@@ -172,34 +171,34 @@ public class LwjglMultiCanvas implements Application {
                     context.canvas.releaseContext();
                 }
             } catch (LWJGLException ex) {
-                Exceptions.printStackTrace(ex);
+                ex.printStackTrace();
             } finally {
                 try {
                     context.canvas.unlockPeer();
                 } catch (LWJGLException ex) {
-                    Exceptions.printStackTrace(ex);
+                    ex.printStackTrace();
                 }
             }
         }
 
-//        input.resetValues(); TODO
+        input.resetValues();
     }
 
     public void addCanvas(AWTGLCanvas2 canvas, ApplicationListener listener) {
-        AWTCanvasContext context = new AWTCanvasContext();
+        LwjglMultiCanvas.AWTCanvasContext context = new LwjglMultiCanvas.AWTCanvasContext();
         context.canvas = canvas;
         context.listener = listener;
         synchronized (canvases) {
             canvases.add(context);
         }
-//        input.initContext(canvas); TODO
+        input.initContext(canvas);
     }
 
     public void removeCanvas(AWTGLCanvas2 canvas) {
-        AWTCanvasContext context = null;
+        LwjglMultiCanvas.AWTCanvasContext context = null;
         synchronized (canvases) {
             for (int i = 0; i < canvases.size(); i++) {
-                AWTCanvasContext ctx = canvases.get(i);
+                LwjglMultiCanvas.AWTCanvasContext ctx = canvases.get(i);
                 if (ctx.canvas == canvas) {
                     context = canvases.remove(i);
                     break;
@@ -214,7 +213,7 @@ public class LwjglMultiCanvas implements Application {
                 context.listener.dispose();
             }
         }
-//        input.removeContext(canvas); //TODO
+        input.removeContext(canvas);
     }
 
     @Override
@@ -238,8 +237,8 @@ public class LwjglMultiCanvas implements Application {
     }
 
     @Override
-    public ApplicationType getType() {
-        return ApplicationType.Desktop;
+    public Application.ApplicationType getType() {
+        return Application.ApplicationType.Desktop;
     }
 
     @Override
@@ -332,7 +331,7 @@ public class LwjglMultiCanvas implements Application {
             @Override
             public void run() {
                 // shutdown all applications
-                for (AWTCanvasContext context : canvases) {
+                for (LwjglMultiCanvas.AWTCanvasContext context : canvases) {
                     if (context.initialized) {
                         context.listener.pause();
                         context.listener.dispose();

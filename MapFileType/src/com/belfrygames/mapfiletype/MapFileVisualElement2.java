@@ -1,11 +1,8 @@
 package com.belfrygames.mapfiletype;
 
-import com.badlogic.gdx.ApplicationListener;
-import com.badlogic.gdx.backends.lwjgl.LwjglApp;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglMultiCanvas;
-import com.sun.org.apache.bcel.internal.classfile.Code;
-import java.awt.*;
+import java.awt.BorderLayout;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JPanel;

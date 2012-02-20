@@ -278,12 +278,6 @@ public class AWTGLCanvas2 extends Canvas implements DrawableLWJGL, ComponentList
         }
     }
 
-    private final Dimension min = new Dimension(1, 1);
-    @Override
-    public Dimension getMinimumSize() {
-        return min;
-    }
-
     public void releaseContext() throws LWJGLException {
         synchronized (SYNC_LOCK) {
             if (context == null) {
@@ -349,6 +343,12 @@ public class AWTGLCanvas2 extends Canvas implements DrawableLWJGL, ComponentList
     
     public void updateContext() {
         context.update();
+    }
+    
+    private final Dimension min = new Dimension(1, 1);
+    @Override
+    public Dimension getMinimumSize() {
+        return min;
     }
 
     @Override
