@@ -8,17 +8,25 @@
 *.swp
 *.out
 
-# Netbeans ignore stuff
-.sbt-hack-lock
-/nbproject/private/
-/build/
-
 # Eclipse ignore stuff
 .cache
 .project
 .classpath
+
+# Netbeans ignore stuff
+.sbt-hack-lock
+/nbproject/private/
+/build/
+/Gdx/release/
+/Gdx/build/
+/Gdx/nbproject/private/
 /SBTModule/target/
 /SBTModule/project/target/
 /SBTModule/nbproject/private/
 /MavenTest/target/
 /scala-library/build/
+/MapEditor/build/
+/MapFileType/build/
+/MapFileType/nbproject/private/
+/SBTModule/build/
+
