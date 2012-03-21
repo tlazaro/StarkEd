@@ -95,10 +95,18 @@ public class LwjglMultiCanvas implements Application {
 
                 if (running) {
                     graphics.updateTime();
-                    
+
                     synchronized (canvases) {
-                        for (LwjglMultiCanvas.AWTCanvasContext context : canvases) {
-                            updateCanvas(context);
+                        int i = 0;
+                        while(i < canvases.size()) {
+                            try{
+                                updateCanvas(canvases.get(i));
+                            } catch(Exception ex) {
+                                ex.printStackTrace();
+                                removeCanvas(canvases.get(i).canvas);
+                                i--;
+                            }
+                            i++;
                         }
                     }
                     audio.update();

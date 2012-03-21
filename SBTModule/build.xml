@@ -12,22 +12,6 @@
         </exec>
     </target>
 
-<!--    <target name="jar" description="Build JAR.">
-        <exec dir="${basedir}" executable="sbt">
-            <arg value=";package"></arg>
-        </exec>
-         This task adds some or all of: -Public-Packages, -Friends, Class-Path, -IDE-Dependencies, -Module-Dependencies, -Specification-Version, -Implementation-Version, -Build-Version, AutoUpdate-Show-In-Client 
-        <jarwithmoduleattributes jarfile="${cluster}/${module.jar}" compress="${build.package.compress}" index="${build.package.index}" manifest="${manifest.mf}" stamp="${cluster}/.lastModified">
-            <fileset dir="${build.classes.dir}"/>
-        </jarwithmoduleattributes>
-        <copy todir="${basedir}/release/modules">
-            <fileset file="${basedir}/target/scala-2.9.1/sbtmodule_2.9.1-0.1-SNAPSHOT.jar"/>
-        </copy>
-        <copy todir="${basedir}/../build/cluster/modules">
-            <fileset file="${basedir}/target/scala-2.9.1/sbtmodule_2.9.1-0.1-SNAPSHOT.jar"/>
-        </copy>
-    </target>-->
-
     <target name="compile" description="Compile project." depends="init,up-to-date">
         <mkdir dir="${build.classes.dir}"/>
         <exec dir="${basedir}" executable="sbt" failonerror="true">
