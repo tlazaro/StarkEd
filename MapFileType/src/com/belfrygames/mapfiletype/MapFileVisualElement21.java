@@ -1,5 +1,6 @@
 package com.belfrygames.mapfiletype;
 
+import static com.belfrygames.mapfiletype.NativesLoader.*;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
@@ -8,6 +9,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import javax.swing.Action;
 import javax.swing.JComponent;
@@ -19,12 +22,6 @@ import org.netbeans.core.spi.multiview.MultiViewElementCallback;
 import org.openide.awt.UndoRedo;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
-import org.openide.util.NbBundle;
-import org.openide.windows.TopComponent;
-
-import static com.belfrygames.mapfiletype.NativesLoader.*;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 
 public class MapFileVisualElement21 extends JPanel implements MultiViewElement {
 
@@ -55,6 +52,7 @@ public class MapFileVisualElement21 extends JPanel implements MultiViewElement {
     private static void doLoadLibrary(final String lib_name) {
         AccessController.doPrivileged(new PrivilegedAction<Object>() {
 
+            @Override
             public Object run() {
                 System.load(lib_name);
                 return null;
@@ -111,11 +109,11 @@ public class MapFileVisualElement21 extends JPanel implements MultiViewElement {
                     
                     System.out.println("PARENT IS: " + parentClassLoader);
 
-                    Class c = parentClassLoader.loadClass("org.lwjgl.Sys");
+                    Class<?> c = parentClassLoader.loadClass("org.lwjgl.Sys");
                     Method method = c.getMethod("initialize");
                     method.invoke(null);
                     
-                    Class nativeLoader = parentClassLoader.loadClass("CustomNativeLoader");
+                    Class<?> nativeLoader = parentClassLoader.loadClass("CustomNativeLoader");
                     Method loadLibrary = nativeLoader.getMethod("loadLibrary", String.class, String.class);
                     System.out.println("Invoked:");
                     System.out.println(loadLibrary.invoke(null, "libgdx.so", "libgdx64.so"));
@@ -147,7 +145,7 @@ public class MapFileVisualElement21 extends JPanel implements MultiViewElement {
             }
 
             try {
-                Class nativesLoader = loader.loadClass("com.badlogic.gdx.utils.GdxNativesLoader");
+                Class<?> nativesLoader = loader.loadClass("com.badlogic.gdx.utils.GdxNativesLoader");
                 Field disableNativesLoading = nativesLoader.getField("disableNativesLoading");
                 disableNativesLoading.setBoolean(null, true);
                 if (NATIVES_LOADED) {
@@ -155,7 +153,7 @@ public class MapFileVisualElement21 extends JPanel implements MultiViewElement {
                     NATIVES_LOADED = true;
                 }
 
-                Class c = loader.loadClass("com.belfrygames.editor.EditorApp");
+                Class<?> c = loader.loadClass("com.belfrygames.editor.EditorApp");
                 Method method = c.getMethod("createCanvas");
                 canvas = (Canvas) method.invoke(null);
             } catch (Exception ex) {

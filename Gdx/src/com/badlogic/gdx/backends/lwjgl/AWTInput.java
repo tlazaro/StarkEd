@@ -6,13 +6,16 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.utils.Pool;
 import java.awt.AWTException;
 import java.awt.Point;
-import java.awt.event.*;
-import javax.swing.SwingUtilities;
-import org.lwjgl.opengl.AWTGLCanvas2;
+import java.awt.event.KeyEvent;
 import static java.awt.event.KeyEvent.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.swing.SwingUtilities;
+import org.lwjgl.opengl.AWTGLCanvas2;
 
 /**
  *
@@ -108,7 +111,7 @@ public class AWTInput implements Input {
     private TouchEvent mouseEvent(MouseEvent me) {
         TouchEvent event = usedTouchEvents.obtain();
         event.x = me.getX();
-        event.y = Gdx.graphics.getHeight() - me.getY() - 1;
+        event.y = me.getY();
         event.button = toGdxButton(me.getButton());
         event.pointer = 0;
         event.timeStamp = TimeUnit.MILLISECONDS.toNanos(me.getWhen());
@@ -216,8 +219,8 @@ public class AWTInput implements Input {
                     touchEvents.add(event);
                 }
 
-                x = me.getX();
-                y = me.getY();
+                x = event.x;
+                y = event.y;
             }
 
             @Override
@@ -230,8 +233,8 @@ public class AWTInput implements Input {
                     touchEvents.add(event);
                 }
 
-                x = me.getX();
-                y = me.getY();
+                x = event.x;
+                y = event.y;
             }
         };
 
@@ -828,12 +831,14 @@ public class AWTInput implements Input {
     }
     private final static Pool<AWTKeyEvent> usedKeyEvents = new Pool<AWTKeyEvent>(16, 1000) {
 
+        @Override
         protected AWTKeyEvent newObject() {
             return new AWTKeyEvent();
         }
     };
     private final static Pool<TouchEvent> usedTouchEvents = new Pool<TouchEvent>(16, 1000) {
 
+        @Override
         protected TouchEvent newObject() {
             return new TouchEvent();
         }

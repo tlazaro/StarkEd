@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: com.belfrygames.starkengine
+OpenIDE-Module-Localizing-Bundle: com/belfrygames/starkengine/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

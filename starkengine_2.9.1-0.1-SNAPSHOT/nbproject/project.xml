@@ -3,19 +3,11 @@
     <type>org.netbeans.modules.apisupport.project</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
-            <code-name-base>com.belfrygames.sbttest</code-name-base>
+            <code-name-base>com.belfrygames.starkengine</code-name-base>
             <suite-component/>
             <module-dependencies>
                 <dependency>
                     <code-name-base>com.badlogic.gdx</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <specification-version>1.0</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
-                    <code-name-base>com.belfrygames.starkengine</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
@@ -32,8 +24,16 @@
                 </dependency>
             </module-dependencies>
             <public-packages>
-                <package>com.belfrygames.sbttest</package>
+                <package>com.belfrygames.plat.utils</package>
+                <package>com.belfrygames.starkengine.core</package>
+                <package>com.belfrygames.starkengine.input</package>
+                <package>com.belfrygames.starkengine.tags</package>
+                <package>com.belfrygames.starkengine.utils</package>
             </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/starkengine_2.9.1-0.1-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/starkengine_2.9.1-0.1-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
         </data>
     </configuration>
 </project>

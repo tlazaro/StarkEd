@@ -15,6 +15,22 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>com.belfrygames.sbttest</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.0</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>com.belfrygames.starkengine</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.0</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.netbeans.api.visual</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -101,6 +117,14 @@
                     <compile-dependency/>
                     <run-dependency>
                         <specification-version>6.48.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>scala</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.0</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>

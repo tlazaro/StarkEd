@@ -31,7 +31,7 @@ public class LwjglMultiCanvas implements Application {
 
     final LwjglGraphics2 graphics;
     final OpenALAudio audio;
-    final LwjglFiles files;
+    final LwjglFilesPro files;
     final LwjglMultiCanvasInput input;
     final List<Runnable> runnables = new ArrayList<Runnable>();
     final List<LwjglMultiCanvas.AWTCanvasContext> canvases = new ArrayList<LwjglMultiCanvas.AWTCanvasContext>();
@@ -55,7 +55,7 @@ public class LwjglMultiCanvas implements Application {
 
         graphics = new LwjglGraphics2(config);
         audio = new OpenALAudio();
-        files = new LwjglFiles();
+        files = new LwjglFilesPro();
         input = new LwjglMultiCanvasInput();
 
         Gdx.app = this;
@@ -95,7 +95,7 @@ public class LwjglMultiCanvas implements Application {
 
                 if (running) {
                     graphics.updateTime();
-
+                    
                     synchronized (canvases) {
                         for (LwjglMultiCanvas.AWTCanvasContext context : canvases) {
                             updateCanvas(context);
@@ -109,7 +109,7 @@ public class LwjglMultiCanvas implements Application {
                     }
                 }
             }
-        }, 100, 100);
+        }, 0, 100);
     }
 
     private void updateCanvas(LwjglMultiCanvas.AWTCanvasContext context) {

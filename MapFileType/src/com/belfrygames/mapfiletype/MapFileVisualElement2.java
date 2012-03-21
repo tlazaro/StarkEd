@@ -2,6 +2,7 @@ package com.belfrygames.mapfiletype;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglMultiCanvas;
+import com.belfrygames.sbttest.EditorAppTest;
 import java.awt.BorderLayout;
 import javax.swing.Action;
 import javax.swing.JComponent;
@@ -54,8 +55,10 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
 
         if (app == null) {
             LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-            config.useGL20 = false;
+            config.useGL20 = true;
             config.resizable = true;
+            config.useCPUSynch = false;
+            config.vSyncEnabled = false;
             app = new LwjglMultiCanvas(null, config);
         }
 
@@ -86,7 +89,8 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
             } catch (LWJGLException ex) {
                 Exceptions.printStackTrace(ex);
             }
-            app.addCanvas(canvas, new EditorApp(com.badlogic.gdx.graphics.Color.MAGENTA));
+            
+            app.addCanvas(canvas, EditorAppTest.getApp());
             panel.add(canvas, BorderLayout.CENTER);
             panel.repaint();
         }
