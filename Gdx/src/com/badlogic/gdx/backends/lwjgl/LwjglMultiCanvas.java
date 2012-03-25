@@ -117,7 +117,7 @@ public class LwjglMultiCanvas implements Application {
                     }
                 }
             }
-        }, 0, 100);
+        }, 0, 50);
     }
 
     private void updateCanvas(LwjglMultiCanvas.AWTCanvasContext context) {

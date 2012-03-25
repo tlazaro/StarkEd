@@ -2,6 +2,7 @@ package com.belfrygames.mapfiletype;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglMultiCanvas;
+import com.belfrygames.mapeditor.JSON;
 import com.belfrygames.sbttest.EditorAppTest;
 import java.awt.BorderLayout;
 import javax.swing.Action;
@@ -14,6 +15,8 @@ import org.netbeans.core.spi.multiview.CloseOperationState;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.MultiViewElementCallback;
 import org.openide.awt.UndoRedo;
+import org.openide.filesystems.FileChangeAdapter;
+import org.openide.filesystems.FileEvent;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
@@ -25,10 +28,10 @@ mimeType = "text/x-starkmap",
 persistenceType = TopComponent.PERSISTENCE_NEVER,
 preferredID = "MapFileVisual2",
 position = 3000)
-@NbBundle.Messages("LBL_MapFile_VISUAL2=Visual2")
+@NbBundle.Messages("LBL_MapFile_VISUAL2=Map")
 public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
 
-    private static boolean NATIVES_LOADED = false;
+    private EditorAppTest editorapp;
     private MapFileDataObject obj;
     private JToolBar toolbar = new JToolBar();
     private transient MultiViewElementCallback callback;
@@ -36,6 +39,26 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
     public MapFileVisualElement2(Lookup lkp) {
         obj = lkp.lookup(MapFileDataObject.class);
         assert obj != null;
+
+        obj.getPrimaryFile().addFileChangeListener(new FileChangeAdapter() {
+
+            @Override
+            public void fileChanged(FileEvent fe) {
+                refresh();
+            }
+        });
+    }
+
+    private void refresh() {
+        System.out.println("Trying to refresh...");
+        try {
+            String fileText = obj.getPrimaryFile().asText();
+            if (editorapp != null) {
+                editorapp.getMapScreen().postUpdate(JSON.parseText(fileText));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -89,8 +112,10 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
             } catch (LWJGLException ex) {
                 Exceptions.printStackTrace(ex);
             }
-            
-            app.addCanvas(canvas, EditorAppTest.getApp());
+
+            editorapp = EditorAppTest.getApp();
+            refresh();
+            app.addCanvas(canvas, editorapp);
             panel.add(canvas, BorderLayout.CENTER);
             panel.repaint();
         }

@@ -54,14 +54,6 @@ class ScreenTest extends Screen {
     app.inputs.addProcessor(new InputTest())
   }
   
-  def screenToViewPortX(x: Float) = {
-    (x - (Gdx.graphics.getWidth - targetWidth) / 2) * (Gdx.graphics.getWidth.toFloat / targetWidth.toFloat)
-  }
-
-  def screenToViewPortY(y: Float) = {
-    (y - (Gdx.graphics.getHeight - targetHeight) / 2) * (Gdx.graphics.getHeight.toFloat / targetHeight.toFloat)
-  }
-  
   class InputTest extends InputAdapter {
     import com.badlogic.gdx.Input.Keys._
 
