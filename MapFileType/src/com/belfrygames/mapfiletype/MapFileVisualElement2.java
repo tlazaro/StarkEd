@@ -3,29 +3,36 @@ package com.belfrygames.mapfiletype;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglMultiCanvas;
 import com.belfrygames.mapeditor.JSON;
+import com.belfrygames.mapfiletype.actions.BrushAction;
+import com.belfrygames.mapfiletype.actions.BucketFillAction;
+import com.belfrygames.mapfiletype.palette.TileSetNodeFactory;
 import com.belfrygames.sbttest.EditorAppTest;
 import java.awt.BorderLayout;
-import javax.swing.Action;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.JToolBar;
+import javax.swing.*;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.AWTGLCanvas2;
 import org.netbeans.core.spi.multiview.CloseOperationState;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.MultiViewElementCallback;
+import org.netbeans.spi.palette.PaletteActions;
+import org.netbeans.spi.palette.PaletteController;
+import org.netbeans.spi.palette.PaletteFactory;
 import org.openide.awt.UndoRedo;
 import org.openide.filesystems.FileChangeAdapter;
 import org.openide.filesystems.FileEvent;
+import org.openide.nodes.AbstractNode;
+import org.openide.nodes.Children;
+import org.openide.nodes.Node;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
+import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 
 @MultiViewElement.Registration(displayName = "#LBL_MapFile_VISUAL2",
 iconBase = "com/belfrygames/mapfiletype/iron_throne_cropped_normal.png",
 mimeType = "text/x-starkmap",
-persistenceType = TopComponent.PERSISTENCE_NEVER,
+persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED,
 preferredID = "MapFileVisual2",
 position = 3000)
 @NbBundle.Messages("LBL_MapFile_VISUAL2=Map")
@@ -33,8 +40,9 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
 
     private EditorAppTest editorapp;
     private MapFileDataObject obj;
-    private JToolBar toolbar = new JToolBar();
+    private final JToolBar toolbar;
     private transient MultiViewElementCallback callback;
+    private final ProxyLookup lookup;
 
     public MapFileVisualElement2(Lookup lkp) {
         obj = lkp.lookup(MapFileDataObject.class);
@@ -47,6 +55,52 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
                 refresh();
             }
         });
+
+        toolbar = new JToolBar();
+        toolbar.addSeparator();
+        ButtonGroup group = new ButtonGroup();
+        group.add((JToggleButton) toolbar.add(new JToggleButton(new BrushAction(lkp))));
+        group.add((JToggleButton) toolbar.add(new JToggleButton(new BucketFillAction(lkp))));
+        toolbar.setFloatable(false);
+
+        Node root = new AbstractNode(Children.create(new TileSetNodeFactory(), false));
+        PaletteActions a = new PaletteActions() {
+
+            @Override
+            public Action[] getImportActions() {
+                System.out.println("Action getImportActions");
+                return new Action[0];
+            }
+
+            @Override
+            public Action[] getCustomPaletteActions() {
+                System.out.println("Action getCustomPaletteActions");
+                return new Action[0];
+            }
+
+            @Override
+            public Action[] getCustomCategoryActions(Lookup category) {
+                System.out.println("Action getCustomCategoryActions : " + category);
+                return new Action[0];
+            }
+
+            @Override
+            public Action[] getCustomItemActions(Lookup item) {
+                System.out.println("Action getCustomItemActions : " + item);
+                return new Action[0];
+            }
+
+            @Override
+            public Action getPreferredAction(Lookup item) {
+                System.out.println("Action on : " + item);
+                return null;
+            }
+        };
+        PaletteController p = PaletteFactory.createPalette(root, a);
+
+        lookup = new ProxyLookup();
+        lookup.add(obj.getLookup());
+        lookup.add(Lookups.fixed(p));
     }
 
     private void refresh() {
@@ -135,7 +189,7 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
 
     @Override
     public Lookup getLookup() {
-        return obj.getLookup();
+        return lookup;
     }
 
     @Override

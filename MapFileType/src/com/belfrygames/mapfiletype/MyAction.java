@@ -16,9 +16,10 @@ import org.openide.util.NbBundle.Messages;
 id = "com.belfrygames.mapfiletype.MyAction")
 @ActionRegistration(displayName = "#CTL_MyAction")
 @ActionReferences({
-    @ActionReference(path = "Loaders/text/x-starkmap/Actions", position = 2000)
+    @ActionReference(path = "Loaders/text/x-starkmap/Actions", position = 2000),
+    @ActionReference(path = "MyToolbars/StarkMap", position=300)
 })
-@Messages("CTL_MyAction=My Action")
+@Messages("CTL_MyAction=Lannister")
 public final class MyAction implements ActionListener {
 
     private final MapFileDataObject context;

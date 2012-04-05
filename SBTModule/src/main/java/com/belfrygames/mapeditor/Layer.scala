@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.belfrygames.starkengine.core.Drawable
 import com.belfrygames.starkengine.core.Updateable
 
-class Layer(private var width: Int, private var height: Int, val tileWidth: Int, val tileHeight: Int) extends Drawable with Updateable {
+class Layer(val name: String, private var width: Int, private var height: Int, val tileWidth: Int, val tileHeight: Int) extends Drawable with Updateable {
   private var tiles = Array.ofDim[Tile](height, width)
   
   def apply(x: Int, y: Int) = {

@@ -80,4 +80,8 @@
             </file>
         </folder>
     </folder>
+    <folder name="MyToolbars">
+        <file name="StarkMapToolbar.xml" url="StarkMapToolbar.xml"/>
+    </folder>
+
 </filesystem>

@@ -26,7 +26,7 @@ class MapScreen extends Screen {
     Screen.DEBUG = true
     Screen.SHOW_KEYS = false
     
-    app.resizePolicy = Original
+    app.resizePolicy = OriginalCanvas
     app.resize(Gdx.graphics.getWidth, Gdx.graphics.getHeight)
     
     addSprite(cursor)

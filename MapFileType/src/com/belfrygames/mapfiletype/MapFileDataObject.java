@@ -1,5 +1,9 @@
 package com.belfrygames.mapfiletype;
 
+import com.belfrygames.mapfiletype.actions.BrushInterface;
+import com.belfrygames.mapfiletype.actions.BrushSupport;
+import com.belfrygames.mapfiletype.actions.BucketFillInterface;
+import com.belfrygames.mapfiletype.actions.BucketFillSupport;
 import java.io.IOException;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.text.MultiViewEditorElement;
@@ -15,9 +19,28 @@ import org.openide.windows.TopComponent;
 
 public class MapFileDataObject extends MultiDataObject {
 
+    public static enum CursorState {
+
+        BRUSH,
+        BUCKET_FILL
+    }
+    private BrushSupport brushSupport = null;
+    private BucketFillSupport bucketFillSupport = null;
+
     public MapFileDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, IOException {
         super(pf, loader);
         registerEditor("text/x-starkmap", true);
+
+        brushSupport = new BrushSupport(this);
+        bucketFillSupport = new BucketFillSupport(this);
+
+        getCookieSet().assign(BrushInterface.class, brushSupport);
+        getCookieSet().assign(BucketFillInterface.class, bucketFillSupport);
+        getCookieSet().assign(CursorState.class, CursorState.BRUSH);
+    }
+
+    <T> void associateLookup(Class<? extends T> clazz, T... instances) {
+        getCookieSet().assign(clazz, instances);
     }
 
     @Override
@@ -27,10 +50,7 @@ public class MapFileDataObject extends MultiDataObject {
 
     @Override
     protected Node createNodeDelegate() {
-        return new MapFileNode(
-                this,
-                Children.create(new MapFileChildFactory(this), true),
-                getLookup());
+        return new MapFileNode(this, Children.create(new MapFileChildFactory(this), true), getLookup());
     }
 
     @MultiViewElement.Registration(displayName = "#LBL_MapFile_EDITOR",
@@ -42,5 +62,13 @@ public class MapFileDataObject extends MultiDataObject {
     @Messages("LBL_MapFile_EDITOR=Source")
     public static MultiViewEditorElement createEditor(Lookup lkp) {
         return new MultiViewEditorElement(lkp);
+    }
+
+    synchronized public final void brush() {
+        getCookieSet().assign(CursorState.class, CursorState.BRUSH);
+    }
+
+    synchronized public final void bucketFill() {
+        getCookieSet().assign(CursorState.class, CursorState.BUCKET_FILL);
     }
 }

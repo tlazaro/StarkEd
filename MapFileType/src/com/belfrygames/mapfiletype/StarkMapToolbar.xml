@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configuration PUBLIC "-//NetBeans IDE//DTD toolbar//EN" "http://www.netbeans.org/dtds/toolbar.dtd">
+<Configuration>
+    <Row>
+        <Toolbar name="StarkMap"/>
+    </Row>
+</Configuration>

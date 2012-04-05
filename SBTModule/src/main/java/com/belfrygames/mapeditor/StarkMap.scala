@@ -59,7 +59,7 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
                 
                   clearLayers()
                   for((key, value) <- layersDef; list = value.asInstanceOf[List[List[Double]]]) {
-                    val layer = addLayer()
+                    val layer = addLayer(key)
                     println("Adding layer named: " + key + " wiht values:" + value)
                     for(y <- 0 until list.size; x <- 0 until list.head.size) {
                       layer(x, y) = tileSet(list(y)(x).toInt)
@@ -84,8 +84,8 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
     layers.clear()
   }
   
-  def addLayer(at: Int = -1): Layer = {
-    val layer = new Layer(width, height, tileWidth, tileHeight)
+  def addLayer(name: String, at: Int = -1): Layer = {
+    val layer = new Layer(name, width, height, tileWidth, tileHeight)
     if (at < 0 || at >= layers.size) {
       layers.append(layer)
     } else {
@@ -103,9 +103,15 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
     removeUpdateable(layer)
   }
   
+  def removeLayer(layer: Layer) {
+    removeLayer(layers indexOf layer)
+  }
+  
+  def layerNames(): Array[String] = layers.map(_.name).toArray
+  
   def fromTexture(regions: Array[Array[TextureRegion]]) {
     val tiles = TileSet.fromSplitTexture(regions)
-    val layer = addLayer(0)
+    val layer = addLayer("background", 0)
     layer.fill(tiles)
   }
   
