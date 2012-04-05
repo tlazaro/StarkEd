@@ -10,6 +10,14 @@ import com.belfrygames.starkengine.tags._
 import scala.collection.mutable.ListBuffer
 
 class StarkMap(private var width0: Int, private var height0: Int, var tileWidth: Int, var tileHeight: Int) extends DrawableParent with UpdateableParent {
+  var tileSet: TileSet = null
+  private var listener: Option[MapListener] = None
+  
+  def clearListener() = listener = None
+  def setListener(listener: MapListener) {
+    this.listener = Some(listener)
+  }
+  
   def width = width0
   def width_=(value: Int) {
     width0 = value
@@ -35,32 +43,24 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
       case p: JSON.Success[Any] => {
           p.get match {
             case obj : Map[String, Any] => {
-                println("Working on a map...")
-                for((key, value) <- obj) {
-                  println("Found: " + key + ", " + value)
-                }
+                for(map <- obj.get("map").collect(isMap);
+                    layersDef <- map.get("layers").collect(isMap);
+                    w <- map.get("width").collect(isNumber);
+                    h <- map.get("height").collect(isNumber);
+                    tWidth <- map.get("tileWidth").collect(isNumber);
+                    tHeight <- map.get("tileHeight").collect(isNumber);
+                    tileSetName <- map.get("tileSet").collect(isString)) {
                 
-                for(map <- obj.get("map").collect(isMap); a = println("map ok");
-                    layersDef <- map.get("layers").collect(isMap); a = println("layers ok");
-                    w <- map.get("width").collect(isNumber); a = println("width ok");
-                    h <- map.get("height").collect(isNumber); a = println("height ok");
-                    tWidth <- map.get("tileWidth").collect(isNumber); a = println("tileWidth ok");
-                    tHeight <- map.get("tileHeight").collect(isNumber); a = println("tileHeight ok");
-                    tileSetName <- map.get("tileSet").collect(isString); a = println("tileSet ok")) {
-                
-                  println("Looking good...")
-                  
                   width = w.toInt
                   height = h.toInt
                   tileWidth = tWidth.toInt
                   tileHeight = tHeight.toInt
                     
-                  val tileSet = TileSet.fromSplitTexture(Resources.split("com/belfrygames/mapeditor/terrenos.png", tileWidth, tileHeight, 1, 2, false, false))
+                  tileSet = TileSet.fromSplitTexture(Resources.split("com/belfrygames/mapeditor/terrenos.png", tileWidth, tileHeight, 1, 2, false, false))
                 
                   clearLayers()
                   for((key, value) <- layersDef; list = value.asInstanceOf[List[List[Double]]]) {
                     val layer = addLayer(key)
-                    println("Adding layer named: " + key + " wiht values:" + value)
                     for(y <- 0 until list.size; x <- 0 until list.head.size) {
                       layer(x, y) = tileSet(list(y)(x).toInt)
                     }
@@ -74,6 +74,43 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
           println("INVALID JSON UPDATE")
         }
     }
+  }
+  
+  def serializeText(): String = {
+    var ind = 0
+    def indent = " " * (ind * 2)
+    def indentValue(value: Int) = " " * (value * 2)
+    
+    val b = new StringBuilder
+    b append "{\n"; ind += 1
+    b append indent + "\"map\": {\n"; ind += 1
+    
+    b append indent + "\"width\": " + width + ",\n"
+    b append indent + "\"height\": " + height + ",\n"
+    b append indent + "\"tileWidth\": " + tileWidth + ",\n"
+    b append indent + "\"tileHeight\": " + tileHeight + ",\n"
+    b append indent + "\"tileSet\": " + "\"com/belfrygames/mapeditor/terrenos.png\"" + ",\n"
+    
+    b append indent + "\"layers\": {\n"; ind += 1
+    for(layer <- layers) {
+      b append indent + "\"" + layer.name + "\": "; ind += 1
+      
+      b append (for(y <- 0 until layer.getHeight) yield {
+          (for(x <- 0 until layer.getWidth) yield {
+              val tile = layer(x, y)
+              val id = if (tile != null) tile.id else -1;
+              id
+            }).mkString(indent + "[", ", ", "]")
+        }).mkString("[\n", ",\n", "\n" + indentValue(ind - 1) + "]\n")
+      ind -= 1
+    }
+    
+    while(ind > 0) {
+      ind -= 1
+      b append indent + "}\n"
+    }
+    
+    b.toString
   }
   
   def clearLayers() = {
@@ -113,6 +150,25 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
     val tiles = TileSet.fromSplitTexture(regions)
     val layer = addLayer("background", 0)
     layer.fill(tiles)
+  }
+  
+  def applyTool(x: Float, y: Float, tool: Tool): Boolean = {
+    val xCoord = (x / tileWidth).toInt
+    val yCoord = height - 1 - (y / tileHeight).toInt
+    
+    if ((0 <= xCoord && xCoord < width) && (0 <= yCoord && yCoord < height)) {
+      tool match {
+        case Brush(tile) => {
+            layers.last(xCoord, yCoord) = tile
+            
+            listener foreach { _.mapChanged(this) }
+            
+            true
+          }
+      }
+    } else {
+      false
+    }
   }
   
   override def debugDraw(renderer: ShapeRenderer) {

@@ -3,11 +3,18 @@ package com.belfrygames.mapfiletype;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglMultiCanvas;
 import com.belfrygames.mapeditor.JSON;
+import com.belfrygames.mapeditor.MapListener;
+import com.belfrygames.mapeditor.StarkMap;
 import com.belfrygames.mapfiletype.actions.BrushAction;
 import com.belfrygames.mapfiletype.actions.BucketFillAction;
+import com.belfrygames.mapfiletype.palette.TileNode;
 import com.belfrygames.mapfiletype.palette.TileSetNodeFactory;
 import com.belfrygames.sbttest.EditorAppTest;
 import java.awt.BorderLayout;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.OutputStream;
 import javax.swing.*;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.AWTGLCanvas2;
@@ -64,18 +71,16 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
         toolbar.setFloatable(false);
 
         Node root = new AbstractNode(Children.create(new TileSetNodeFactory(), false));
-        PaletteActions a = new PaletteActions() {
+        PaletteActions paletteActions = new PaletteActions() {
 
             @Override
             public Action[] getImportActions() {
-                System.out.println("Action getImportActions");
-                return new Action[0];
+                return null;
             }
 
             @Override
             public Action[] getCustomPaletteActions() {
-                System.out.println("Action getCustomPaletteActions");
-                return new Action[0];
+                return null;
             }
 
             @Override
@@ -86,21 +91,36 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
 
             @Override
             public Action[] getCustomItemActions(Lookup item) {
-                System.out.println("Action getCustomItemActions : " + item);
-                return new Action[0];
+                return null;
             }
 
             @Override
             public Action getPreferredAction(Lookup item) {
-                System.out.println("Action on : " + item);
                 return null;
             }
         };
-        PaletteController p = PaletteFactory.createPalette(root, a);
+
+        final PaletteController paletteController = PaletteFactory.createPalette(root, paletteActions);
+
+        paletteController.addPropertyChangeListener(new PropertyChangeListener() {
+
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (PaletteController.PROP_SELECTED_ITEM.equals(evt.getPropertyName())) {
+                    Lookup selItem = paletteController.getSelectedItem();
+                    if (null != selItem) {
+                        TileNode selNode = selItem.lookup(TileNode.class);
+                        if (null != selNode) {
+                            System.out.println("Selected node: " + selNode.getDisplayName());
+                        }
+                    }
+                }
+            }
+        });
 
         lookup = new ProxyLookup();
         lookup.add(obj.getLookup());
-        lookup.add(Lookups.fixed(p));
+        lookup.add(Lookups.fixed(paletteController));
     }
 
     private void refresh() {
@@ -169,6 +189,29 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
 
             editorapp = EditorAppTest.getApp();
             refresh();
+            editorapp.getMapScreen().postMapListener(new MapListener() {
+
+                @Override
+                public void mapChanged(StarkMap map) {
+                    OutputStream out = null;
+                    try {
+                        out = obj.getPrimaryFile().getOutputStream();
+                        out.write(map.serializeText().getBytes("UTF-8"));
+                    } catch (Exception ex) {
+                        Exceptions.printStackTrace(ex);
+                    } finally {
+                        if (out != null) {
+                            try {
+                                out.flush();
+                                out.close();
+                            } catch (IOException ex) {
+                                Exceptions.printStackTrace(ex);
+                            }
+                        }
+                    }
+                }
+            });
+            
             app.addCanvas(canvas, editorapp);
             panel.add(canvas, BorderLayout.CENTER);
             panel.repaint();

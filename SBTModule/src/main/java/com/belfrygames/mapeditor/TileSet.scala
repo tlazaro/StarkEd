@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 object TileSet {
   def fromSplitTexture(regions: Array[Array[TextureRegion]]): TileSet = {
     val regs = regions.flatten.toIndexedSeq
-    new TileSet(for(i <- 0 until regs.size) yield Tile(regs(i)))
+    new TileSet(for(i <- 0 until regs.size) yield Tile(regs(i), i))
   }
 }
 

@@ -18,9 +18,9 @@ public class TileNode extends AbstractNode {
 
         this.setDisplayName(getLabel());
         this.setName(getLabel());
-        this.setShortDescription(getHtmlDisplayName());
+        this.setShortDescription(getLabel());
     }
-
+    
     @Override
     public String getHtmlDisplayName() {
         return "<b>" + tile.getId() + "</b> ( Tile )";

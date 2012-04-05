@@ -5,12 +5,14 @@ import com.belfrygames.starkengine.core.Particle
 import com.belfrygames.starkengine.core.Sprite
 
 object Tile {
-  def apply(region: TextureRegion) = {
+  def apply(region: TextureRegion, idNum: Int) = {
     new Tile {
+      override val id = idNum
       textureRegion = region
     }
   }
 }
 
 trait Tile extends Particle with Sprite {
+  val id: Int
 }

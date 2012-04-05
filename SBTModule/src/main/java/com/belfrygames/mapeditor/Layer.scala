@@ -26,6 +26,9 @@ class Layer(val name: String, private var width: Int, private var height: Int, v
     }
   }
   
+  def getWidth = width
+  def getHeight = height
+  
   override def debugDraw(spriteBatch: ShapeRenderer) {
   }
   

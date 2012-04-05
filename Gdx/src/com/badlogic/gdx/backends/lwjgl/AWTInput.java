@@ -1,6 +1,5 @@
 package com.badlogic.gdx.backends.lwjgl;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.utils.Pool;
@@ -112,7 +111,7 @@ public class AWTInput implements Input {
         TouchEvent event = usedTouchEvents.obtain();
         event.x = me.getX();
         event.y = me.getY();
-        event.button = toGdxButton(me.getButton());
+        event.button = toGdxButton(getMouseButtonCode(me));
         event.pointer = 0;
         event.timeStamp = TimeUnit.MILLISECONDS.toNanos(me.getWhen());
 
@@ -335,7 +334,7 @@ public class AWTInput implements Input {
 
     @Override
     public boolean isButtonPressed(int button) {
-        return isButtonPressed(toAWTButton(button));
+        return isMousePressed(toAWTButton(button));
     }
 
     @Override
@@ -450,9 +449,9 @@ public class AWTInput implements Input {
             case MOUSE_BUTTON_1:
                 return Buttons.LEFT;
             case MOUSE_BUTTON_2:
-                return Buttons.RIGHT;
-            case MOUSE_BUTTON_3:
                 return Buttons.MIDDLE;
+            case MOUSE_BUTTON_3:
+                return Buttons.RIGHT;
             default:
                 return -1;
         }

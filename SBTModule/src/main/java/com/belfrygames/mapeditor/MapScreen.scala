@@ -4,11 +4,12 @@ import com.belfrygames.starkengine.core._
 import com.belfrygames.starkengine.tags._
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.math.Vector3
 
 class MapScreen extends Screen {
-  
+  def getStarkMap() = starkMap
   var starkMap: StarkMap = null
   lazy val cursor = Sprite(app.res.get("cursor"))
   
@@ -40,10 +41,14 @@ class MapScreen extends Screen {
   
   override def update(elapsed : Long @@ Milliseconds) {
     if (postUpdate.isDefined) {
-      println("Applying Update...")
       starkMap.applyUpdate(postUpdate.get)
       postUpdate = None
     }
+    
+    if (postListener.isDefined) {
+      starkMap.setListener(postListener.get)
+      postListener = None
+    } 
     
     super.update(elapsed)
   }
@@ -51,6 +56,11 @@ class MapScreen extends Screen {
   var postUpdate: Option[JSON.ParseResult[Any]] = None
   def postUpdate(parsed: JSON.ParseResult[Any]) {
     postUpdate = Some(parsed)
+  }
+  
+  var postListener: Option[MapListener] = None
+  def postMapListener(listener: MapListener) {
+    postListener = Some(listener)
   }
   
   def setMap(map: StarkMap) {
@@ -62,6 +72,15 @@ class MapScreen extends Screen {
     starkMap = map
     regularCam.addDrawable(starkMap)
     addUpdateable(starkMap)
+  }
+  
+  def screenToCanvas(x: Int, y: Int, result: Vector3 = null): Vector3 = {
+    val vec = if (result == null) new Vector3 else result
+    vec.x = screenToViewPortX(x)
+    vec.y = screenToViewPortY(y)
+    vec.z = 0
+    cam.unproject(vec)
+    vec
   }
   
   class InputTest extends InputAdapter {
@@ -78,14 +97,24 @@ class MapScreen extends Screen {
     
     private[this] val tmp = new Vector3
     override def touchMoved(x: Int, y: Int) = {
-      tmp.x = screenToViewPortX(x)
-      tmp.y = screenToViewPortY(y)
-      tmp.z = 0
-      cam.unproject(tmp)
+      screenToCanvas(x, y, tmp)
+      
       cursor.x = tmp.x
       cursor.y = tmp.y
       
       false
+    }
+    
+    override def touchDown(x: Int, y: Int, pointer: Int, button: Int) = {
+      println("Touch down at: [" + x + ", " + y + "] button: " + button)
+      
+      button match {
+        case Input.Buttons.LEFT => {
+            screenToCanvas(x, y, tmp)
+            starkMap.applyTool(tmp.x, tmp.y, Brush(starkMap.tileSet(0)))
+        }
+        case _ => false
+      }
     }
   }
 }
