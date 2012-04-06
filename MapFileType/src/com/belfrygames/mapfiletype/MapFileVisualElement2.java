@@ -8,13 +8,13 @@ import com.belfrygames.mapeditor.StarkMap;
 import com.belfrygames.mapfiletype.actions.BrushAction;
 import com.belfrygames.mapfiletype.actions.BucketFillAction;
 import com.belfrygames.mapfiletype.palette.TileNode;
+import com.belfrygames.mapfiletype.palette.TilePaletteActions;
 import com.belfrygames.mapfiletype.palette.TileSetNodeFactory;
 import com.belfrygames.sbttest.EditorAppTest;
 import java.awt.BorderLayout;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.io.OutputStream;
 import javax.swing.*;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.AWTGLCanvas2;
@@ -34,6 +34,7 @@ import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle;
 import org.openide.util.lookup.Lookups;
+import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
 
 @MultiViewElement.Registration(displayName = "#LBL_MapFile_VISUAL2",
@@ -49,19 +50,14 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
     private MapFileDataObject obj;
     private final JToolBar toolbar;
     private transient MultiViewElementCallback callback;
-    private final ProxyLookup lookup;
+    private final Lookup lookup;
+    private FileListener listener = new FileListener();
 
     public MapFileVisualElement2(Lookup lkp) {
         obj = lkp.lookup(MapFileDataObject.class);
         assert obj != null;
 
-        obj.getPrimaryFile().addFileChangeListener(new FileChangeAdapter() {
-
-            @Override
-            public void fileChanged(FileEvent fe) {
-                refresh();
-            }
-        });
+        obj.getPrimaryFile().addFileChangeListener(listener);
 
         toolbar = new JToolBar();
         toolbar.addSeparator();
@@ -71,34 +67,7 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
         toolbar.setFloatable(false);
 
         Node root = new AbstractNode(Children.create(new TileSetNodeFactory(), false));
-        PaletteActions paletteActions = new PaletteActions() {
-
-            @Override
-            public Action[] getImportActions() {
-                return null;
-            }
-
-            @Override
-            public Action[] getCustomPaletteActions() {
-                return null;
-            }
-
-            @Override
-            public Action[] getCustomCategoryActions(Lookup category) {
-                System.out.println("Action getCustomCategoryActions : " + category);
-                return new Action[0];
-            }
-
-            @Override
-            public Action[] getCustomItemActions(Lookup item) {
-                return null;
-            }
-
-            @Override
-            public Action getPreferredAction(Lookup item) {
-                return null;
-            }
-        };
+        PaletteActions paletteActions = new TilePaletteActions();
 
         final PaletteController paletteController = PaletteFactory.createPalette(root, paletteActions);
 
@@ -118,20 +87,50 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
             }
         });
 
-        lookup = new ProxyLookup();
-        lookup.add(obj.getLookup());
-        lookup.add(Lookups.fixed(paletteController));
+        lookup = new ProxyLookup(obj.getLookup(), Lookups.fixed(paletteController));
     }
 
-    private void refresh() {
-        System.out.println("Trying to refresh...");
-        try {
-            String fileText = obj.getPrimaryFile().asText();
+    private class FileListener extends FileChangeAdapter implements MapListener {
+
+        private volatile String text = null;
+        
+        private void clearCache() {
+            text = "";
+        }
+
+        @Override
+        public synchronized void fileChanged(FileEvent fe) {
+            try {
+                String newText = obj.getPrimaryFile().asText();
+                if (!newText.equals(text)) {
+                    refresh(newText);
+                }
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+
+        @Override
+        public synchronized void mapChanged(final StarkMap map) {
+            final MapFileEditorElement editor = obj.getLookup().lookup(MapFileEditorElement.class);
+            SwingUtilities.invokeLater(new Runnable() {
+
+                @Override
+                public void run() {
+                    final String serializeText = map.serializeText();
+                    editor.getEditorPane().setText(serializeText);
+                    text = serializeText;
+                }
+            });
+        }
+
+        @SuppressWarnings("CallToThreadDumpStack")
+        private void refresh(String fileText) {
+            System.out.println("Trying to refresh...");
             if (editorapp != null) {
                 editorapp.getMapScreen().postUpdate(JSON.parseText(fileText));
+                text = fileText;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -188,30 +187,10 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
             }
 
             editorapp = EditorAppTest.getApp();
-            refresh();
-            editorapp.getMapScreen().postMapListener(new MapListener() {
+            editorapp.getMapScreen().postMapListener(listener);
+            listener.clearCache();
+            listener.fileChanged(null);
 
-                @Override
-                public void mapChanged(StarkMap map) {
-                    OutputStream out = null;
-                    try {
-                        out = obj.getPrimaryFile().getOutputStream();
-                        out.write(map.serializeText().getBytes("UTF-8"));
-                    } catch (Exception ex) {
-                        Exceptions.printStackTrace(ex);
-                    } finally {
-                        if (out != null) {
-                            try {
-                                out.flush();
-                                out.close();
-                            } catch (IOException ex) {
-                                Exceptions.printStackTrace(ex);
-                            }
-                        }
-                    }
-                }
-            });
-            
             app.addCanvas(canvas, editorapp);
             panel.add(canvas, BorderLayout.CENTER);
             panel.repaint();

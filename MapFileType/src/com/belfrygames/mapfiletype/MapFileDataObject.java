@@ -61,7 +61,7 @@ public class MapFileDataObject extends MultiDataObject {
     position = 1000)
     @Messages("LBL_MapFile_EDITOR=Source")
     public static MultiViewEditorElement createEditor(Lookup lkp) {
-        return new MultiViewEditorElement(lkp);
+        return new MapFileEditorElement(lkp);
     }
 
     synchronized public final void brush() {

@@ -98,12 +98,14 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
       b append (for(y <- 0 until layer.getHeight) yield {
           (for(x <- 0 until layer.getWidth) yield {
               val tile = layer(x, y)
-              val id = if (tile != null) tile.id else -1;
-              id
+              if (tile != null) tile.id else -1
             }).mkString(indent + "[", ", ", "]")
-        }).mkString("[\n", ",\n", "\n" + indentValue(ind - 1) + "]\n")
+        }).mkString("[\n", ",\n", "\n" + indentValue(ind - 1) + "],\n")
       ind -= 1
     }
+    
+    if (!layers.isEmpty)
+      b.deleteCharAt(b.length - 2)
     
     while(ind > 0) {
       ind -= 1
@@ -153,22 +155,23 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
   }
   
   def applyTool(x: Float, y: Float, tool: Tool): Boolean = {
-    val xCoord = (x / tileWidth).toInt
-    val yCoord = height - 1 - (y / tileHeight).toInt
+    var change = false
+    if ((0 <= x && x < tileWidth * width) && (0 <= y && y < tileHeight * height)) {
+      val xCoord = (x / tileWidth).toInt
+      val yCoord = height - 1 - (y / tileHeight).toInt
     
-    if ((0 <= xCoord && xCoord < width) && (0 <= yCoord && yCoord < height)) {
       tool match {
         case Brush(tile) => {
-            layers.last(xCoord, yCoord) = tile
-            
-            listener foreach { _.mapChanged(this) }
-            
-            true
+            val old = layers.last(xCoord, yCoord)
+            if (tile != old) {
+              layers.last(xCoord, yCoord) = tile
+              change = true
+              listener foreach (_.mapChanged(this))
+            }
           }
       }
-    } else {
-      false
     }
+    change
   }
   
   override def debugDraw(renderer: ShapeRenderer) {

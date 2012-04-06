@@ -449,9 +449,9 @@ public class AWTInput implements Input {
             case MOUSE_BUTTON_1:
                 return Buttons.LEFT;
             case MOUSE_BUTTON_2:
-                return Buttons.MIDDLE;
-            case MOUSE_BUTTON_3:
                 return Buttons.RIGHT;
+            case MOUSE_BUTTON_3:
+                return Buttons.MIDDLE;
             default:
                 return -1;
         }

@@ -21,6 +21,14 @@ class MapScreen extends Screen {
     super.deregister()
   }
   
+  def getMapSize() = {
+    if (starkMap == null) {
+      new java.awt.Dimension(200, 200)
+    } else {
+      new java.awt.Dimension(starkMap.tileWidth * starkMap.width, starkMap.tileHeight * starkMap.height)
+    }
+  }
+  
   override def create(app: StarkApp) {
     super.create(app)
     
@@ -74,13 +82,8 @@ class MapScreen extends Screen {
     addUpdateable(starkMap)
   }
   
-  def screenToCanvas(x: Int, y: Int, result: Vector3 = null): Vector3 = {
-    val vec = if (result == null) new Vector3 else result
-    vec.x = screenToViewPortX(x)
-    vec.y = screenToViewPortY(y)
-    vec.z = 0
-    cam.unproject(vec)
-    vec
+  def getCurrentTool: Tool = {
+    Brush(starkMap.tileSet(0))
   }
   
   class InputTest extends InputAdapter {
@@ -105,14 +108,29 @@ class MapScreen extends Screen {
       false
     }
     
-    override def touchDown(x: Int, y: Int, pointer: Int, button: Int) = {
-      println("Touch down at: [" + x + ", " + y + "] button: " + button)
+    override def touchDragged(x: Int, y: Int, pointer: Int): Boolean = {
+      screenToCanvas(x, y, tmp)
       
+      cursor.x = tmp.x
+      cursor.y = tmp.y
+      
+      if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+        starkMap.applyTool(tmp.x, tmp.y, getCurrentTool)
+      } else {
+        false
+      }
+    }
+    
+    override def touchDown(x: Int, y: Int, pointer: Int, button: Int) = {
       button match {
         case Input.Buttons.LEFT => {
             screenToCanvas(x, y, tmp)
-            starkMap.applyTool(tmp.x, tmp.y, Brush(starkMap.tileSet(0)))
-        }
+            if (starkMap != null) {
+              starkMap.applyTool(tmp.x, tmp.y, getCurrentTool)
+            }  else {
+              false
+            }
+          }
         case _ => false
       }
     }

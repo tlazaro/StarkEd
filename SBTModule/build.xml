@@ -6,15 +6,17 @@
     <description>Builds, tests, and runs the project com.belfrygames.sbttest.</description>
     <import file="nbproject/build-impl.xml"/>
     
+    <property name="sbt" value="sbt"/>
+    
     <target name="clean" description="Clean build products.">
-        <exec dir="${basedir}" executable="sbt">
+        <exec dir="${basedir}" executable="${sbt}">
             <arg value=";clean"></arg>
         </exec>
     </target>
 
     <target name="compile" description="Compile project." depends="init,up-to-date">
         <mkdir dir="${build.classes.dir}"/>
-        <exec dir="${basedir}" executable="sbt" failonerror="true">
+        <exec dir="${basedir}" executable="${sbt}" failonerror="true">
             <arg value=";compile"></arg>
         </exec>
         <copy todir="${build.classes.dir}">
@@ -26,13 +28,13 @@
     </target>
 
     <target name="test" description="Run unit tests.">
-        <exec dir="${basedir}" executable="sbt">
+        <exec dir="${basedir}" executable="${sbt}">
             <arg value=";test"></arg>
         </exec>
     </target>
     
     <target name="run-single">
-        <exec dir="${basedir}" executable="sbt">
+        <exec dir="${basedir}" executable="${sbt}">
             <arg value="run-main ${run.class}"></arg>
         </exec>        
     </target>
@@ -41,7 +43,7 @@
         <echo>You must set the main class for the main 'run' task. Change Compile to Test to set it for 'test:run': 
         mainClass in (Compile, run) := Some({main.class})
         </echo>
-        <exec dir="${basedir}" executable="sbt">
+        <exec dir="${basedir}" executable="${sbt}">
             <arg value=";run"></arg>
         </exec>        
     </target>       
@@ -61,7 +63,7 @@
     </target>  
     
     <target name="-javadoc-build">
-        <exec dir="${basedir}" executable="sbt">
+        <exec dir="${basedir}" executable="${sbt}">
             <arg value=";project common;package-doc"></arg>
         </exec>        
     </target>
