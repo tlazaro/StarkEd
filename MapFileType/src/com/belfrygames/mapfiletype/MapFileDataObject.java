@@ -7,6 +7,7 @@ import com.belfrygames.mapfiletype.actions.BucketFillSupport;
 import java.io.IOException;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.text.MultiViewEditorElement;
+import org.netbeans.spi.navigator.NavigatorLookupHint;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataObjectExistsException;
 import org.openide.loaders.MultiDataObject;
@@ -15,6 +16,7 @@ import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 
 public class MapFileDataObject extends MultiDataObject {
@@ -26,10 +28,15 @@ public class MapFileDataObject extends MultiDataObject {
     }
     private BrushSupport brushSupport = null;
     private BucketFillSupport bucketFillSupport = null;
+    private MapFileModel model;
 
     public MapFileDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, IOException {
         super(pf, loader);
         registerEditor("text/x-starkmap", true);
+
+        model = new MapFileModel();
+        getCookieSet().assign(MapFileModel.class, model);
+        getCookieSet().assign(MapNavigatorLookupHint.class, new MapNavigatorLookupHint());
 
         brushSupport = new BrushSupport(this);
         bucketFillSupport = new BucketFillSupport(this);
@@ -39,6 +46,10 @@ public class MapFileDataObject extends MultiDataObject {
         getCookieSet().assign(CursorState.class, CursorState.BRUSH);
     }
 
+    public MapFileModel getModel() {
+        return model;
+    }
+    
     <T> void associateLookup(Class<? extends T> clazz, T... instances) {
         getCookieSet().assign(clazz, instances);
     }
@@ -70,5 +81,13 @@ public class MapFileDataObject extends MultiDataObject {
 
     synchronized public final void bucketFill() {
         getCookieSet().assign(CursorState.class, CursorState.BUCKET_FILL);
+    }
+
+    private static final class MapNavigatorLookupHint implements NavigatorLookupHint {
+
+        @Override
+        public String getContentType() {
+            return "text/x-starkmap";
+        }
     }
 }

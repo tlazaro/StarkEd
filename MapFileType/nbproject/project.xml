@@ -48,6 +48,24 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.netbeans.modules.settings</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>1.33.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.netbeans.spi.navigator</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>1.20.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.netbeans.spi.palette</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -137,7 +155,11 @@
                     </run-dependency>
                 </dependency>
             </module-dependencies>
-            <public-packages/>
+            <public-packages>
+                <package>com.belfrygames.mapfiletype</package>
+                <package>com.belfrygames.mapfiletype.actions</package>
+                <package>com.belfrygames.mapfiletype.palette</package>
+            </public-packages>
             <class-path-extension>
                 <runtime-relative-path>ext/gdx-backend-lwjgl-natives.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gdx-backend-lwjgl-natives.jar</binary-origin>

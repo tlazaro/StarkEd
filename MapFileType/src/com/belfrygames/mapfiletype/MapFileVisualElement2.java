@@ -93,7 +93,7 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
     private class FileListener extends FileChangeAdapter implements MapListener {
 
         private volatile String text = null;
-        
+
         private void clearCache() {
             text = "";
         }
@@ -119,6 +119,7 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
                 public void run() {
                     final String serializeText = map.serializeText();
                     editor.getEditorPane().setText(serializeText);
+                    obj.getModel().setMap(editorapp.getMapScreen().getStarkMap());
                     text = serializeText;
                 }
             });

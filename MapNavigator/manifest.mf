@@ -1,5 +1,6 @@
 Manifest-Version: 1.0
 OpenIDE-Module: com.belfrygames.mapnavigator
+OpenIDE-Module-Layer: com/belfrygames/mapnavigator/layer.xml
 OpenIDE-Module-Localizing-Bundle: com/belfrygames/mapnavigator/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
 
