@@ -52,12 +52,26 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
     private transient MultiViewElementCallback callback;
     private final Lookup lookup;
     private FileListener listener = new FileListener();
+    private AWTGLCanvas2 canvas;
+    private JPanel panel = new JPanel();
+    private static LwjglMultiCanvas app;
+
+    static {
+        LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+        config.useGL20 = true;
+        config.resizable = true;
+        config.useCPUSynch = false;
+        config.vSyncEnabled = false;
+        app = new LwjglMultiCanvas(null, config);
+    }
 
     public MapFileVisualElement2(Lookup lkp) {
         obj = lkp.lookup(MapFileDataObject.class);
         assert obj != null;
 
         obj.getPrimaryFile().addFileChangeListener(listener);
+        
+        panel.setLayout(new BorderLayout(0, 0));
 
         toolbar = new JToolBar();
         toolbar.addSeparator();
@@ -88,6 +102,8 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
         });
 
         lookup = new ProxyLookup(obj.getLookup(), Lookups.fixed(paletteController));
+        
+        createCanvas();
     }
 
     private class FileListener extends FileChangeAdapter implements MapListener {
@@ -110,6 +126,12 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
             }
         }
 
+        private void updateTableModel() {
+            if (editorapp != null && editorapp.getMapScreen().getStarkMap() != null) {
+                obj.getModel().setMap(editorapp.getMapScreen().getStarkMap());
+            }
+        }
+
         @Override
         public synchronized void mapChanged(final StarkMap map) {
             final MapFileEditorElement editor = obj.getLookup().lookup(MapFileEditorElement.class);
@@ -119,17 +141,16 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
                 public void run() {
                     final String serializeText = map.serializeText();
                     editor.getEditorPane().setText(serializeText);
-                    obj.getModel().setMap(editorapp.getMapScreen().getStarkMap());
+                    updateTableModel();
                     text = serializeText;
                 }
             });
         }
 
-        @SuppressWarnings("CallToThreadDumpStack")
         private void refresh(String fileText) {
-            System.out.println("Trying to refresh...");
             if (editorapp != null) {
                 editorapp.getMapScreen().postUpdate(JSON.parseText(fileText));
+                updateTableModel();
                 text = fileText;
             }
         }
@@ -139,26 +160,8 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
     public String getName() {
         return "MapFileVisualElement2";
     }
-    private AWTGLCanvas2 canvas;
-    private JPanel panel;
-    private static LwjglMultiCanvas app;
 
-    @Override
-    public JComponent getVisualRepresentation() {
-        if (panel == null) {
-            panel = new JPanel();
-            panel.setLayout(new BorderLayout(0, 0));
-        }
-
-        if (app == null) {
-            LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-            config.useGL20 = true;
-            config.resizable = true;
-            config.useCPUSynch = false;
-            config.vSyncEnabled = false;
-            app = new LwjglMultiCanvas(null, config);
-        }
-
+    private void createCanvas() {
         if (canvas == null) {
             try {
                 canvas = new AWTGLCanvas2() {
@@ -196,7 +199,11 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
             panel.add(canvas, BorderLayout.CENTER);
             panel.repaint();
         }
+    }
 
+    @Override
+    public JComponent getVisualRepresentation() {
+        createCanvas();
         return panel;
     }
 

@@ -166,8 +166,8 @@ public class MapFileModel implements TableModel {
         @Override
         public boolean canImport(TransferHandler.TransferSupport ts) {
             ts.setShowDropLocation(true);
-            for (DataFlavor falvor : ts.getDataFlavors()) {
-                if (EntrySelection.CUSTOM_FLAVOR.equals(falvor)) {
+            for (DataFlavor flavor : ts.getDataFlavors()) {
+                if (EntrySelection.CUSTOM_FLAVOR.equals(flavor)) {
                     return true;
                 }
             }
@@ -181,27 +181,31 @@ public class MapFileModel implements TableModel {
                 return false;
             }
 
+
             // fetch the drop location
             JTable.DropLocation dl = (JTable.DropLocation) support.getDropLocation();
-
             int row = dl.getRow();
 
             // fetch the data and bail if this fails
             EntrySelection data;
             try {
                 data = (EntrySelection) support.getTransferable().getTransferData(EntrySelection.CUSTOM_FLAVOR);
-            } catch (UnsupportedFlavorException ufe) {
-                Exceptions.printStackTrace(ufe);
-                return false;
             } catch (Exception e) {
                 Exceptions.printStackTrace(e);
                 return false;
             }
 
-            MapFileModel.this.moveRows(row, data);
+            // Apply action
+            switch (support.getDropAction()) {
+                case MOVE:
+                    MapFileModel.this.moveRows(row, data);
+                    break;
+                case TransferHandler.COPY:
+                    break;
+            }
 
+            // Make change visible
             JTable table = (JTable) support.getComponent();
-
             Rectangle rect = table.getCellRect(row, 0, false);
             if (rect != null) {
                 table.scrollRectToVisible(rect);
@@ -233,13 +237,24 @@ public class MapFileModel implements TableModel {
             rowIndex++;
         }
 
+        String[] names = new String[entries.size()];
+        boolean[] visible = new boolean[entries.size()];
+        for (int i = 0; i < names.length; i++) {
+            ModelEntry entry = entries.get(i);
+            names[names.length - 1 - i] = entry.name;
+            visible[names.length - 1 - i] = entry.visible;
+        }
+        map.organizeLayers(names, visible);
+
         fireTableChanged();
     }
 
     private void reloadMap() {
         entries.clear();
-        for (String layer : map.layerNames()) {
-            entries.add(new ModelEntry(true, layer));
+        String[] names = map.layerNames();
+        boolean[] visible = map.layerVisible();
+        for (int i = 0; i < names.length; i++) {
+            entries.add(new ModelEntry(visible[i], names[i]));
         }
         Collections.reverse(entries);
         fireTableChanged();
@@ -291,7 +306,16 @@ public class MapFileModel implements TableModel {
     @Override
     public void setValueAt(Object value, int rowIndex, int columnIndex) {
         entries.get(rowIndex).setValueAt(value, columnIndex);
+
+        if (columnIndex == 0) {
+            boolean visible = (Boolean) value;
+            map.setVisible(entries.size() - 1 - rowIndex, visible);
+        }
         // TODO notify map
+    }
+
+    public void selectionChanged(int start, int end) {
+        map.setCurrentLayer(entries.size() - 1 - end);
     }
 
     @Override

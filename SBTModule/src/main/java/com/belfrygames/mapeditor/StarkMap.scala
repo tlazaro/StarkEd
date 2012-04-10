@@ -16,6 +16,7 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
   def clearListener() = listener = None
   def setListener(listener: MapListener) {
     this.listener = Some(listener)
+    fireMapChanged()
   }
   
   def width = width0
@@ -123,8 +124,7 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
     layers.clear()
   }
   
-  def addLayer(name: String, at: Int = -1): Layer = {
-    val layer = new Layer(name, width, height, tileWidth, tileHeight)
+  def addLayer(layer: Layer, at: Int): Layer = {
     if (at < 0 || at >= layers.size) {
       layers.append(layer)
     } else {
@@ -134,6 +134,38 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
     addDrawable(layer)
     addUpdateable(layer)
     layer
+  }
+  
+  def addLayer(name: String, at: Int = -1): Layer = {
+    val layer = new Layer(name, width, height, tileWidth, tileHeight)
+    addLayer(layer, at)
+  }
+  
+  def organizeLayers(names: Array[String], visible: Array[Boolean]): Boolean = {
+    if (names.length != visible.length || names.length != layers.size) {
+      println("Wrong names or visible sizes")
+      return false
+    }
+    
+    val mapped = names.map(name => layers.find(_.name == name)).flatten
+    if (mapped.length != layers.size) {
+      println("Layers not found")
+      return false
+    }
+    
+    clearLayers()
+    mapped.foreach(addLayer(_, -1))
+    
+    for(i <- 0 until visible.length) {
+      setVisible(i, visible(i))
+    }
+    
+    fireMapChanged()
+    true
+  }
+  
+  def setVisible(index: Int, visible: Boolean) {
+    layers(index).visible = visible
   }
   
   def removeLayer(at: Int) {
@@ -147,11 +179,22 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
   }
   
   def layerNames(): Array[String] = layers.map(_.name).toArray
+  def layerVisible(): Array[Boolean] = layers.map(_.visible).toArray
   
   def fromTexture(regions: Array[Array[TextureRegion]]) {
     val tiles = TileSet.fromSplitTexture(regions)
     val layer = addLayer("background", 0)
     layer.fill(tiles)
+  }
+  
+  var currentLayer = -1
+  def getCurrentLayer: Layer = if (currentLayer < 0) layers.last else layers(currentLayer)
+  def setCurrentLayer(index: Int) {
+    if (index < 0 || index >= layers.size) {
+      // ignore
+      println("Invalid Layer index: " + index)
+    }
+    currentLayer = index
   }
   
   def applyTool(x: Float, y: Float, tool: Tool): Boolean = {
@@ -162,11 +205,11 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
     
       tool match {
         case Brush(tile) => {
-            val old = layers.last(xCoord, yCoord)
+            val old = getCurrentLayer(xCoord, yCoord)
             if (tile != old) {
-              layers.last(xCoord, yCoord) = tile
+              getCurrentLayer(xCoord, yCoord) = tile
               change = true
-              listener foreach (_.mapChanged(this))
+              fireMapChanged()
             }
           }
       }
@@ -193,5 +236,9 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
     for(layer <- layers) {
       layer.resize(width, height)
     }
+  }
+  
+  private def fireMapChanged() {
+    listener foreach (_.mapChanged(this))
   }
 }

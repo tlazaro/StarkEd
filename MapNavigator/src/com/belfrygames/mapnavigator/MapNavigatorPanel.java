@@ -1,11 +1,13 @@
 package com.belfrygames.mapnavigator;
 
 import com.belfrygames.mapfiletype.MapFileDataObject;
+import com.belfrygames.mapfiletype.MapFileModel;
 import java.util.Collection;
 import javax.swing.DropMode;
 import javax.swing.JComponent;
 import javax.swing.ListSelectionModel;
-import javax.swing.TransferHandler;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import org.netbeans.spi.navigator.NavigatorPanel;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
@@ -19,16 +21,41 @@ import org.openide.util.Utilities;
 public class MapNavigatorPanel extends JComponent implements NavigatorPanel, LookupListener {
 
     private Lookup.Result<MapFileDataObject> result = null;
+    private final SelectionListener selection;
 
     /**
      * Creates new form MapNavigatorPanel
      */
     public MapNavigatorPanel() {
         initComponents();
-        
+
+        selection = new SelectionListener();
         layersTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        layersTable.getSelectionModel().addListSelectionListener(selection);
     }
-    
+
+    private class SelectionListener implements ListSelectionListener {
+
+        int lastSelectionStart = 0;
+        int lastSelectionEnd = 0;
+
+        public void updateSelection() {
+            layersTable.getSelectionModel().setSelectionInterval(lastSelectionStart, lastSelectionEnd);
+            ((MapFileModel) layersTable.getModel()).selectionChanged(lastSelectionStart, lastSelectionEnd);
+        }
+
+        @Override
+        public void valueChanged(ListSelectionEvent lse) {
+            final ListSelectionModel selModel = layersTable.getSelectionModel();
+            if (selModel.isSelectionEmpty()) {
+                updateSelection();
+            } else {
+                lastSelectionStart = selModel.getMinSelectionIndex();
+                lastSelectionEnd = selModel.getMaxSelectionIndex();
+            }
+        }
+    }
+
     @Override
     public String getDisplayName() {
         return "MapNavigator Name";
@@ -69,6 +96,7 @@ public class MapNavigatorPanel extends JComponent implements NavigatorPanel, Loo
             layersTable.setModel(map.getModel());
             layersTable.setTransferHandler(map.getModel().new LayersTransferHandler("Map Layer Transfer"));
             layersTable.setDropMode(DropMode.INSERT_ROWS);
+            selection.updateSelection();
         }
     }
 
