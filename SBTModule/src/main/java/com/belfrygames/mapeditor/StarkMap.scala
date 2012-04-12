@@ -7,11 +7,90 @@ import com.belfrygames.starkengine.core.DrawableParent
 import com.belfrygames.starkengine.core.Resources
 import com.belfrygames.starkengine.core.UpdateableParent
 import com.belfrygames.starkengine.tags._
+import java.awt.datatransfer.DataFlavor
+import java.awt.datatransfer.Transferable
+import java.awt.datatransfer.UnsupportedFlavorException
+import java.io.IOException
+import javax.swing.JComponent
+import javax.swing.JTable
+import javax.swing.TransferHandler
+import javax.swing.event.TableModelEvent
+import javax.swing.event.TableModelListener
+import javax.swing.table.TableModel
 import scala.collection.mutable.ListBuffer
 
-class StarkMap(private var width0: Int, private var height0: Int, var tileWidth: Int, var tileHeight: Int) extends DrawableParent with UpdateableParent {
-  var tileSet: TileSet = null
+object StarkMap {
+  val COLUMN_NAMES = Array[String]("Visible", "Name")
+  val COLUMN_CLASSES = Array[Class[_]](classOf[java.lang.Boolean], classOf[String])
+  
+  def buildNewMap(update: String, starkMap: StarkMap = null): StarkMap = {
+    buildMap(JSON.parseText(update), starkMap)
+  }
+  
+  def buildMap(update: JSON.ParseResult[Any], starkMap: StarkMap = null): StarkMap = {
+    val isMap: PartialFunction[Any, Map[String, Any]] = {case n: Map[String, Any] => n}
+    val isNumber: PartialFunction[Any, Double] = {case n: Double => n}
+    val isString: PartialFunction[Any, String] = {case n: String => n}
+    
+    var result: StarkMap = starkMap
+    update match {
+      case p: JSON.Success[Any] => {
+          p.get match {
+            case obj : Map[String, Any] => {
+                for(map <- obj.get("map").collect(isMap);
+                    layersDef <- map.get("layers").collect(isMap);
+                    w <- map.get("width").collect(isNumber);
+                    h <- map.get("height").collect(isNumber);
+                    tWidth <- map.get("tileWidth").collect(isNumber);
+                    tHeight <- map.get("tileHeight").collect(isNumber);
+                    tileSetName <- map.get("tileSet").collect(isString)) {
+                  
+                  if (result == null) {
+                    result = new StarkMap(w.toInt, h.toInt, tWidth.toInt, tHeight.toInt)
+                  } else {
+                    result.width = w.toInt
+                    result.height = h.toInt
+                    result.tileWidth = tWidth.toInt
+                    result.tileHeight = tHeight.toInt
+                  }
+                
+                  result.tileSet = null
+                  result.tileSetName = "com/belfrygames/mapeditor/terrenos.png"
+                
+                  result.clearLayers()
+                  for((key, value) <- layersDef; list = value.asInstanceOf[List[List[Double]]]) {
+                    val layer = result.addLayer(key)
+                    for(y <- 0 until list.size; x <- 0 until list.head.size) {
+                      layer(x, y) = list(y)(x).toInt
+                    }
+                  }
+                }
+              }
+            case _ => {
+                println("INVALID JSON UPDATE CANT FIND 'map'")
+              }
+          }
+        }
+      case _ => {
+          println("INVALID JSON UPDATE")
+        }
+    }
+    
+    result
+  }
+}
+
+class StarkMap(private var width0: Int,
+               private var height0: Int,
+               var tileWidth: Int,
+               var tileHeight: Int) extends DrawableParent with UpdateableParent with TableModel {
+  private var tileSet: TileSet = null
+  private var tileSetName: String = null
+  
+  def getTileSet = tileSet
+  
   private var listener: Option[MapListener] = None
+  private val listeners = new java.util.ArrayList[TableModelListener]()
   
   def clearListener() = listener = None
   def setListener(listener: MapListener) {
@@ -33,48 +112,17 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
   
   override def update(elapsed : Long @@ Milliseconds) {
     super.update(elapsed)
+    
+    if (tileSet == null) {
+      tileSet = TileSet.fromSplitTexture(Resources.split(tileSetName, tileWidth, tileHeight, 1, 2, false, false))
+      for(layer <- layers) {
+        layer.tileSet = tileSet
+      }
+    }
   }
   
   def applyUpdate(update: JSON.ParseResult[Any]) {
-    val isMap: PartialFunction[Any, Map[String, Any]] = {case n: Map[String, Any] => n}
-    val isNumber: PartialFunction[Any, Double] = {case n: Double => n}
-    val isString: PartialFunction[Any, String] = {case n: String => n}
-    
-    update match {
-      case p: JSON.Success[Any] => {
-          p.get match {
-            case obj : Map[String, Any] => {
-                for(map <- obj.get("map").collect(isMap);
-                    layersDef <- map.get("layers").collect(isMap);
-                    w <- map.get("width").collect(isNumber);
-                    h <- map.get("height").collect(isNumber);
-                    tWidth <- map.get("tileWidth").collect(isNumber);
-                    tHeight <- map.get("tileHeight").collect(isNumber);
-                    tileSetName <- map.get("tileSet").collect(isString)) {
-                
-                  width = w.toInt
-                  height = h.toInt
-                  tileWidth = tWidth.toInt
-                  tileHeight = tHeight.toInt
-                    
-                  tileSet = TileSet.fromSplitTexture(Resources.split("com/belfrygames/mapeditor/terrenos.png", tileWidth, tileHeight, 1, 2, false, false))
-                
-                  clearLayers()
-                  for((key, value) <- layersDef; list = value.asInstanceOf[List[List[Double]]]) {
-                    val layer = addLayer(key)
-                    for(y <- 0 until list.size; x <- 0 until list.head.size) {
-                      layer(x, y) = tileSet(list(y)(x).toInt)
-                    }
-                  }
-                }
-              }
-            case _ => println("INVALID JSON UPDATE CANT FIND 'map'")
-          }
-        }
-      case _ => {
-          println("INVALID JSON UPDATE")
-        }
-    }
+    StarkMap.buildMap(update, this)
   }
   
   def serializeText(): String = {
@@ -137,7 +185,7 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
   }
   
   def addLayer(name: String, at: Int = -1): Layer = {
-    val layer = new Layer(name, width, height, tileWidth, tileHeight)
+    val layer = new Layer(name, width, height, tileWidth, tileHeight, null)
     addLayer(layer, at)
   }
   
@@ -168,13 +216,14 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
     layers(index).visible = visible
   }
   
-  def removeLayer(at: Int) {
+  def removeLayer(at: Int): Layer = {
     val layer = layers.remove(at)
     removeDrawable(layer)
     removeUpdateable(layer)
+    layer
   }
   
-  def removeLayer(layer: Layer) {
+  def removeLayer(layer: Layer): Layer = {
     removeLayer(layers indexOf layer)
   }
   
@@ -206,7 +255,7 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
       tool match {
         case Brush(tile) => {
             val old = getCurrentLayer(xCoord, yCoord)
-            if (tile != old) {
+            if (tile != old.id) {
               getCurrentLayer(xCoord, yCoord) = tile
               change = true
               fireMapChanged()
@@ -240,5 +289,167 @@ class StarkMap(private var width0: Int, private var height0: Int, var tileWidth:
   
   private def fireMapChanged() {
     listener foreach (_.mapChanged(this))
+  }
+  
+  override def getRowCount(): Int = layers.size
+  
+  override def getColumnCount(): Int = StarkMap.COLUMN_NAMES.length
+
+  override def getColumnName(columnIndex: Int): String = StarkMap.COLUMN_NAMES(columnIndex)
+
+  override def getColumnClass(columnIndex: Int): Class[_] = StarkMap.COLUMN_CLASSES(columnIndex)
+
+  override def isCellEditable(rowIndex: Int, columnIndex: Int): Boolean = {
+    columnIndex match {
+      case 0 => true
+      case _ => false
+    }
+  }
+
+  override def getValueAt(rowIndex: Int, columnIndex: Int): AnyRef = {
+    columnIndex match {
+      case 0 => if (layers(layers.size - 1 - rowIndex).visible) java.lang.Boolean.TRUE else java.lang.Boolean.FALSE
+      case 1 => layers(layers.size - 1 - rowIndex).name
+      case _ => null
+    }
+  }
+  
+  private def getValueAt(rowIndex: Int): (Boolean, String) = {
+    val layer = layers(layers.size - 1 - rowIndex)
+    (layer.visible, layer.name)
+  }
+
+  override def setValueAt(value: AnyRef, rowIndex: Int, columnIndex: Int) {
+    columnIndex match {
+      case 0 => layers(layers.size - 1 - rowIndex).visible = value.asInstanceOf[java.lang.Boolean]
+      case col => println("READ ONLY: " + col)
+    }
+  }
+  
+  override def addTableModelListener(tl: TableModelListener) {
+    listeners.add(tl)
+  }
+
+  override def removeTableModelListener(tl: TableModelListener) {
+    listeners.remove(tl)
+  }
+  
+  def selectionChanged(start: Int, end: Int) {
+    setCurrentLayer(layers.size - 1 - end)
+  }
+  
+  def moveRows(rowIndex: Int, selection: EntrySelection) {
+    import scala.collection.JavaConversions._
+    
+    var row = layers.size - rowIndex
+    
+    val moved = new ListBuffer[Layer]()
+    for (entry <- selection.entries) {
+      val index = layers.indexWhere(_.name == entry.name)
+      moved.prepend(removeLayer(index))
+      if (index < row) {
+        row -= 1
+      }
+    }
+    
+    val (start, end) = layers.splitAt(row)
+    clearLayers()
+    start.foreach(addLayer(_, -1))
+    moved.foreach(addLayer(_, -1))
+    end.foreach(addLayer(_, -1))
+    
+    fireTableChanged()
+  }
+  
+  private def fireTableChanged() {
+    import scala.collection.JavaConversions._
+    val event = new TableModelEvent(this)
+    listeners.foreach(_.tableChanged(event))
+  }
+  
+  class LayersTransferHandler(name: String) extends TransferHandler(name) {
+
+    override def getSourceActions(c: JComponent) = TransferHandler.COPY_OR_MOVE
+
+    override def createTransferable(c: JComponent) = new EntrySelection(c.asInstanceOf[JTable])
+
+    override def exportDone(c: JComponent, t: Transferable, action: Int) {
+    }
+
+    override def canImport(ts: TransferHandler.TransferSupport) = {
+      ts.setShowDropLocation(true)
+      ts.getDataFlavors().find(EntrySelection.CUSTOM_FLAVOR == _).isDefined
+    }
+
+    override def importData(support: TransferHandler.TransferSupport): Boolean = {
+      // if we can't handle the import, say so
+      if (!canImport(support)) {
+        return false;
+      }
+
+      // fetch the drop location
+      val row = support.getDropLocation().asInstanceOf[JTable.DropLocation].getRow()
+
+      // fetch the data and bail if this fails
+      var data: EntrySelection = null
+      try {
+        data = support.getTransferable().getTransferData(EntrySelection.CUSTOM_FLAVOR).asInstanceOf[EntrySelection]
+      } catch {
+        case e => {
+            e.printStackTrace();
+            return false;
+          }
+      }
+
+      // Apply action
+      support.getDropAction() match  {
+        case TransferHandler.MOVE => StarkMap.this.moveRows(row, data);
+        case x => println("Undefined action: " +  x)
+      }
+
+      // Make change visible
+      val table = support.getComponent().asInstanceOf[JTable]
+      val rect = table.getCellRect(row, 0, false)
+      if (rect != null) {
+        table.scrollRectToVisible(rect)
+      }
+
+      true
+    }
+  }
+}
+
+object EntrySelection {
+  val CUSTOM_FLAVOR = new DataFlavor(classOf[EntrySelection], "EntrySelection")
+}
+
+case class MapTableEntry(val visible: Boolean, val name: String)
+
+class EntrySelection private(val entries: java.util.ArrayList[MapTableEntry]) extends Transferable with Serializable {
+  def this(table: JTable) = {
+    this(new java.util.ArrayList[MapTableEntry](table.getSelectedRows().length))
+    for (row <- table.getSelectedRows()) {
+      entries.add(
+        new MapTableEntry(
+          table.getValueAt(row, 0).asInstanceOf[java.lang.Boolean],
+          table.getValueAt(row, 1).asInstanceOf[String]
+        )
+      )
+    }
+  }
+  
+  override def getTransferDataFlavors() = Array[DataFlavor](EntrySelection.CUSTOM_FLAVOR)
+
+  override def isDataFlavorSupported(df: DataFlavor) = {
+    getTransferDataFlavors().find(_ == df).isDefined
+  }
+
+  @throws(classOf[IOException])
+  @throws(classOf[UnsupportedFlavorException])
+  override def getTransferData(df: DataFlavor): AnyRef = {
+    df match {
+      case EntrySelection.CUSTOM_FLAVOR => this
+      case _ => throw new IllegalArgumentException("Unsupported flavor " + df)
+    }
   }
 }

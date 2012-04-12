@@ -63,6 +63,7 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
         config.useCPUSynch = false;
         config.vSyncEnabled = false;
         app = new LwjglMultiCanvas(null, config);
+        System.out.println("APP CREATED");
     }
 
     public MapFileVisualElement2(Lookup lkp) {
@@ -128,7 +129,7 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
 
         private void updateTableModel() {
             if (editorapp != null && editorapp.getMapScreen().getStarkMap() != null) {
-                obj.getModel().setMap(editorapp.getMapScreen().getStarkMap());
+//                obj.getModel().setMap(editorapp.getMapScreen().getStarkMap());
             }
         }
 
@@ -190,7 +191,8 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
                 Exceptions.printStackTrace(ex);
             }
 
-            editorapp = EditorAppTest.getApp();
+            System.out.println("REGISTERING stuff");
+            editorapp = EditorAppTest.getApp(obj.getModel());
             editorapp.getMapScreen().postMapListener(listener);
             listener.clearCache();
             listener.fileChanged(null);

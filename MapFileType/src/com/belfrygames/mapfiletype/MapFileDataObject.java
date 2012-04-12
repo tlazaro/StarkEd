@@ -1,5 +1,6 @@
 package com.belfrygames.mapfiletype;
 
+import com.belfrygames.mapeditor.StarkMap;
 import com.belfrygames.mapfiletype.actions.BrushInterface;
 import com.belfrygames.mapfiletype.actions.BrushSupport;
 import com.belfrygames.mapfiletype.actions.BucketFillInterface;
@@ -14,9 +15,9 @@ import org.openide.loaders.MultiDataObject;
 import org.openide.loaders.MultiFileLoader;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 
 public class MapFileDataObject extends MultiDataObject {
@@ -28,14 +29,13 @@ public class MapFileDataObject extends MultiDataObject {
     }
     private BrushSupport brushSupport = null;
     private BucketFillSupport bucketFillSupport = null;
-    private MapFileModel model;
+    private StarkMap model;
 
     public MapFileDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, IOException {
         super(pf, loader);
         registerEditor("text/x-starkmap", true);
 
-        model = new MapFileModel();
-        getCookieSet().assign(MapFileModel.class, model);
+        getCookieSet().assign(StarkMap.class, getModel());
         getCookieSet().assign(MapNavigatorLookupHint.class, new MapNavigatorLookupHint());
 
         brushSupport = new BrushSupport(this);
@@ -46,10 +46,17 @@ public class MapFileDataObject extends MultiDataObject {
         getCookieSet().assign(CursorState.class, CursorState.BRUSH);
     }
 
-    public MapFileModel getModel() {
+    public final StarkMap getModel() {
+        if (model == null) {
+            try {
+                model = StarkMap.buildNewMap(getPrimaryFile().asText(), null);
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
         return model;
     }
-    
+
     <T> void associateLookup(Class<? extends T> clazz, T... instances) {
         getCookieSet().assign(clazz, instances);
     }

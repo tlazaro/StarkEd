@@ -1,7 +1,7 @@
 package com.belfrygames.mapnavigator;
 
+import com.belfrygames.mapeditor.StarkMap;
 import com.belfrygames.mapfiletype.MapFileDataObject;
-import com.belfrygames.mapfiletype.MapFileModel;
 import java.util.Collection;
 import javax.swing.DropMode;
 import javax.swing.JComponent;
@@ -41,7 +41,7 @@ public class MapNavigatorPanel extends JComponent implements NavigatorPanel, Loo
 
         public void updateSelection() {
             layersTable.getSelectionModel().setSelectionInterval(lastSelectionStart, lastSelectionEnd);
-            ((MapFileModel) layersTable.getModel()).selectionChanged(lastSelectionStart, lastSelectionEnd);
+            ((StarkMap) layersTable.getModel()).selectionChanged(lastSelectionStart, lastSelectionEnd);
         }
 
         @Override
@@ -90,9 +90,9 @@ public class MapNavigatorPanel extends JComponent implements NavigatorPanel, Loo
 
     @Override
     public void resultChanged(LookupEvent ev) {
-        Collection<? extends MapFileDataObject> mp3s = result.allInstances();
-        if (!mp3s.isEmpty()) {
-            MapFileDataObject map = mp3s.iterator().next();
+        Collection<? extends MapFileDataObject> maps = result.allInstances();
+        if (!maps.isEmpty()) {
+            MapFileDataObject map = maps.iterator().next();
             layersTable.setModel(map.getModel());
             layersTable.setTransferHandler(map.getModel().new LayersTransferHandler("Map Layer Transfer"));
             layersTable.setDropMode(DropMode.INSERT_ROWS);
@@ -111,6 +111,8 @@ public class MapNavigatorPanel extends JComponent implements NavigatorPanel, Loo
         tableScrollPane = new javax.swing.JScrollPane();
         layersTable = new javax.swing.JTable();
         layersToolbar = new javax.swing.JToolBar();
+
+        setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
 
         tableScrollPane.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
 
@@ -140,13 +142,13 @@ public class MapNavigatorPanel extends JComponent implements NavigatorPanel, Loo
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)
+            .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
             .addComponent(layersToolbar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE)
+                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 267, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(layersToolbar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
         );

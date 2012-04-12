@@ -8,9 +8,8 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.math.Vector3
 
-class MapScreen extends Screen {
+class MapScreen(val starkMap: StarkMap) extends Screen {
   def getStarkMap() = starkMap
-  var starkMap: StarkMap = null
   lazy val cursor = Sprite(app.res.get("cursor"))
   
   override def register() {
@@ -41,7 +40,9 @@ class MapScreen extends Screen {
     addSprite(cursor)
     cursor.setOrigin(0.5f, 0.5f)
     
-    setMap(new StarkMap(20, 20, 64, 64))
+    regularCam.addDrawable(starkMap)
+    addUpdateable(starkMap)
+    
     starkMap.fromTexture(Resources.split("com/belfrygames/mapeditor/terrenos.png", starkMap.tileWidth, starkMap.tileHeight, 1, 2, false, false))
     
     app.inputs.addProcessor(new InputTest())
@@ -71,19 +72,8 @@ class MapScreen extends Screen {
     postListener = Some(listener)
   }
   
-  def setMap(map: StarkMap) {
-    if (starkMap != null) {
-      regularCam.removeDrawable(starkMap)
-      removeUpdateable(starkMap)
-    }
-    
-    starkMap = map
-    regularCam.addDrawable(starkMap)
-    addUpdateable(starkMap)
-  }
-  
   def getCurrentTool: Tool = {
-    Brush(starkMap.tileSet(0))
+    Brush(0)
   }
   
   class InputTest extends InputAdapter {

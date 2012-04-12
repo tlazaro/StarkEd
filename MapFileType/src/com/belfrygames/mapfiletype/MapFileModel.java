@@ -315,7 +315,9 @@ public class MapFileModel implements TableModel {
     }
 
     public void selectionChanged(int start, int end) {
-        map.setCurrentLayer(entries.size() - 1 - end);
+        if (map != null) {
+            map.setCurrentLayer(entries.size() - 1 - end);
+        }
     }
 
     @Override
