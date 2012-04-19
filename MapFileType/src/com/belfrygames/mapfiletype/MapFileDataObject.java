@@ -1,10 +1,8 @@
 package com.belfrygames.mapfiletype;
 
-import com.belfrygames.mapeditor.StarkMap;
-import com.belfrygames.mapfiletype.actions.BrushInterface;
-import com.belfrygames.mapfiletype.actions.BrushSupport;
-import com.belfrygames.mapfiletype.actions.BucketFillInterface;
-import com.belfrygames.mapfiletype.actions.BucketFillSupport;
+import com.belfrygames.mapeditor.*;
+import com.belfrygames.mapfiletype.actions.ToolInterface;
+import com.belfrygames.mapfiletype.actions.ToolSupport;
 import java.io.IOException;
 import org.netbeans.core.spi.multiview.MultiViewElement;
 import org.netbeans.core.spi.multiview.text.MultiViewEditorElement;
@@ -22,13 +20,6 @@ import org.openide.windows.TopComponent;
 
 public class MapFileDataObject extends MultiDataObject {
 
-    public static enum CursorState {
-
-        BRUSH,
-        BUCKET_FILL
-    }
-    private BrushSupport brushSupport = null;
-    private BucketFillSupport bucketFillSupport = null;
     private StarkMap model;
 
     public MapFileDataObject(FileObject pf, MultiFileLoader loader) throws DataObjectExistsException, IOException {
@@ -38,12 +29,11 @@ public class MapFileDataObject extends MultiDataObject {
         getCookieSet().assign(StarkMap.class, getModel());
         getCookieSet().assign(MapNavigatorLookupHint.class, new MapNavigatorLookupHint());
 
-        brushSupport = new BrushSupport(this);
-        bucketFillSupport = new BucketFillSupport(this);
-
-        getCookieSet().assign(BrushInterface.class, brushSupport);
-        getCookieSet().assign(BucketFillInterface.class, bucketFillSupport);
-        getCookieSet().assign(CursorState.class, CursorState.BRUSH);
+        getCookieSet().assign(ToolInterface.class,
+                new ToolSupport(this, "Selection", Selection$.MODULE$),
+                new ToolSupport(this, "Brush", Brush$.MODULE$),
+                new ToolSupport(this, "Eraser", Eraser$.MODULE$),
+                new ToolSupport(this, "BucketFill", BucketFill$.MODULE$));
     }
 
     public final StarkMap getModel() {
@@ -82,12 +72,8 @@ public class MapFileDataObject extends MultiDataObject {
         return new MapFileEditorElement(lkp);
     }
 
-    synchronized public final void brush() {
-        getCookieSet().assign(CursorState.class, CursorState.BRUSH);
-    }
-
-    synchronized public final void bucketFill() {
-        getCookieSet().assign(CursorState.class, CursorState.BUCKET_FILL);
+    synchronized public final void selectTool(ToolSupport toolSupport) {
+        getModel().setCurrentTool(toolSupport.getTool());
     }
 
     private static final class MapNavigatorLookupHint implements NavigatorLookupHint {

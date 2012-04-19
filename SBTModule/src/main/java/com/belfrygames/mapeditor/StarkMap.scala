@@ -88,6 +88,7 @@ class StarkMap(private var width0: Int,
   private var tileSetName: String = null
   
   def getTileSet = tileSet
+  def getTileSetName() = tileSetName
   
   private var listener: Option[MapListener] = None
   private val listeners = new java.util.ArrayList[TableModelListener]()
@@ -123,6 +124,7 @@ class StarkMap(private var width0: Int,
   
   def applyUpdate(update: JSON.ParseResult[Any]) {
     StarkMap.buildMap(update, this)
+    fireTableChanged()
   }
   
   def serializeText(): String = {
@@ -146,8 +148,7 @@ class StarkMap(private var width0: Int,
       
       b append (for(y <- 0 until layer.getHeight) yield {
           (for(x <- 0 until layer.getWidth) yield {
-              val tile = layer(x, y)
-              if (tile != null) tile.id else -1
+              layer.valueAt(x, y)
             }).mkString(indent + "[", ", ", "]")
         }).mkString("[\n", ",\n", "\n" + indentValue(ind - 1) + "],\n")
       ind -= 1
@@ -246,6 +247,20 @@ class StarkMap(private var width0: Int,
     currentLayer = index
   }
   
+  var currentTileId = -1
+  def getCurrentTileId: Int = currentTileId
+  def setCurrentTileId(currentTileId: Int) {
+    this.currentTileId = currentTileId
+  }
+  
+  var currentTool : Tool = Selection
+  def getCurrentTool: Tool = {
+    currentTool
+  }
+  def setCurrentTool(currentTool: Tool) {
+    this.currentTool = currentTool
+  }
+  
   def applyTool(x: Float, y: Float, tool: Tool): Boolean = {
     var change = false
     if ((0 <= x && x < tileWidth * width) && (0 <= y && y < tileHeight * height)) {
@@ -253,16 +268,33 @@ class StarkMap(private var width0: Int,
       val yCoord = height - 1 - (y / tileHeight).toInt
     
       tool match {
-        case Brush(tile) => {
-            val old = getCurrentLayer(xCoord, yCoord)
-            if (tile != old.id) {
-              getCurrentLayer(xCoord, yCoord) = tile
+        case Brush => {
+            val old = getCurrentLayer.valueAt(xCoord, yCoord)
+            if (getCurrentTileId != old) {
+              getCurrentLayer(xCoord, yCoord) = getCurrentTileId
               change = true
-              fireMapChanged()
             }
+          }
+        case BucketFill => {
+            val old = getCurrentLayer.valueAt(xCoord, yCoord)
+            // TODO implement flood fill algorithm
+            if (getCurrentTileId != old) {
+              getCurrentLayer(xCoord, yCoord) = getCurrentTileId
+              change = true
+            }
+          }
+        case Eraser => {
+            val old = getCurrentLayer.valueAt(xCoord, yCoord)
+            if (old != -1) {
+              getCurrentLayer(xCoord, yCoord) = -1
+              change = true
+            }
+          }
+        case Selection => {
           }
       }
     }
+    if (change) fireMapChanged()
     change
   }
   

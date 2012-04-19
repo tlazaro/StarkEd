@@ -12,15 +12,28 @@ import org.openide.util.ImageUtilities;
  */
 public class Tile implements Transferable {
 
-    public static final DataFlavor DATA_FLAVOR = new DataFlavor(Tile.class, "album");
+    public static final DataFlavor DATA_FLAVOR = new DataFlavor(Tile.class, "tile");
+    private final int id;
     private final String name;
-    private final String smallImage;
-    private final String bigImage;
+    private final String smallImagePath;
+    private final String bigImagePath;
+    private Image smallImage;
+    private Image bigImage;
 
-    public Tile(String name, String smallImage, String bigImage) {
+    public Tile(int id, String name, Image smallImage, Image bigImage) {
+        this.id = id;
         this.name = name;
         this.smallImage = smallImage;
         this.bigImage = bigImage;
+        this.smallImagePath = null;
+        this.bigImagePath = null;
+    }
+
+    public Tile(int id, String name, String smallImage, String bigImage) {
+        this.id = id;
+        this.name = name;
+        this.smallImagePath = smallImage;
+        this.bigImagePath = bigImage;
     }
 
     @Override
@@ -42,7 +55,11 @@ public class Tile implements Transferable {
         }
     }
 
-    public String getId() {
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
         return name;
     }
     private static final int SMALL = 1;
@@ -51,10 +68,16 @@ public class Tile implements Transferable {
     public Image getIcon(int type) {
         switch (type) {
             case BIG:
-                return ImageUtilities.loadImage(bigImage, false);
+                if (bigImage == null) {
+                    bigImage = ImageUtilities.loadImage(bigImagePath, false);
+                }
+                return bigImage;
             case SMALL:
             default:
-                return ImageUtilities.loadImage(smallImage, false);
+                if (smallImage == null) {
+                    smallImage = ImageUtilities.loadImage(smallImagePath, false);
+                }
+                return smallImage;
         }
     }
 }

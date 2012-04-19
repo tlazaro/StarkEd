@@ -2,6 +2,7 @@ package com.belfrygames.mapnavigator;
 
 import com.belfrygames.mapeditor.StarkMap;
 import com.belfrygames.mapfiletype.MapFileDataObject;
+import com.belfrygames.mapfiletype.MapFileModel.LayersTransferHandler;
 import java.util.Collection;
 import javax.swing.DropMode;
 import javax.swing.JComponent;
@@ -75,6 +76,7 @@ public class MapNavigatorPanel extends JComponent implements NavigatorPanel, Loo
     public void panelActivated(org.openide.util.Lookup context) {
         result = Utilities.actionsGlobalContext().lookupResult(MapFileDataObject.class);
         result.addLookupListener(this);
+        resultChanged(null);
     }
 
     @Override
@@ -119,13 +121,10 @@ public class MapNavigatorPanel extends JComponent implements NavigatorPanel, Loo
         layersTable.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         layersTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
+
             }
         ));
         layersTable.setDragEnabled(true);

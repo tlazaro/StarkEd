@@ -1,6 +1,5 @@
 package com.belfrygames.mapfiletype.actions;
 
-import com.belfrygames.mapfiletype.MapFileDataObject.CursorState;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -11,26 +10,28 @@ import org.openide.util.*;
  *
  * @author tomas
  */
-public class BrushAction extends AbstractAction implements LookupListener, ContextAwareAction {
+public class ToolAction extends AbstractAction implements LookupListener, ContextAwareAction {
 
     private Lookup context;
-    Lookup.Result<BrushInterface> lkpInfo;
+    private ToolInterface toolImpl;
+    Lookup.Result<ToolInterface> toolLkp;
 
-    public BrushAction(Lookup context) {
-        putValue(Action.NAME, NbBundle.getMessage(BrushAction.class, "CTL_BrushAction"));
+    public ToolAction(Lookup context, ToolInterface toolImpl) {
+        putValue(Action.NAME, NbBundle.getMessage(ToolAction.class, "CTL_" + toolImpl.toolId() + "Action"));
         this.context = context;
+        this.toolImpl = toolImpl;
     }
 
     void init() {
         assert SwingUtilities.isEventDispatchThread() : "this shall be called just from AWT thread";
 
-        if (lkpInfo != null) {
+        if (toolLkp != null) {
             return;
         }
 
         //The thing we want to listen for the presence or absence of on the global selection
-        lkpInfo = context.lookupResult(BrushInterface.class);
-        lkpInfo.addLookupListener(this);
+        toolLkp = context.lookupResult(ToolInterface.class);
+        toolLkp.addLookupListener(this);
         resultChanged(null);
     }
 
@@ -43,19 +44,27 @@ public class BrushAction extends AbstractAction implements LookupListener, Conte
     @Override
     public void actionPerformed(ActionEvent ev) {
         init();
+        toolImpl.apply();
+    }
 
-        for (BrushInterface instance : lkpInfo.allInstances()) {
-            instance.brush();
+    private ToolInterface findTool() {
+        for (ToolInterface instance : toolLkp.allInstances()) {
+            if (instance.equals(toolImpl)) {
+                return instance;
+            }
         }
+
+        return null;
     }
 
     @Override
     public void resultChanged(LookupEvent ev) {
-        setEnabled(!lkpInfo.allInstances().isEmpty());
+        // It should be enabled if it's available
+        setEnabled(toolImpl.equals(findTool()));
     }
 
     @Override
     public Action createContextAwareInstance(Lookup context) {
-        return new BrushAction(context);
+        return new ToolAction(context, toolImpl);
     }
 }

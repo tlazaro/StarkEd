@@ -1,5 +1,6 @@
 package com.belfrygames.mapfiletype.palette;
 
+import com.belfrygames.mapfiletype.MapFileDataObject;
 import java.util.List;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -10,6 +11,12 @@ import org.openide.nodes.Node;
  */
 public class TileSetNodeFactory extends ChildFactory<String> {
 
+    private MapFileDataObject obj;
+
+    public TileSetNodeFactory(MapFileDataObject obj) {
+        this.obj = obj;
+    }
+
     @Override
     protected boolean createKeys(List<String> toPopulate) {
         toPopulate.add("root");
@@ -18,6 +25,6 @@ public class TileSetNodeFactory extends ChildFactory<String> {
 
     @Override
     protected Node[] createNodesForKey(String key) {
-        return new Node[]{new TileSetNode("Grasslands")};
+        return new Node[]{new TileSetNode(obj.getModel().getTileSetName())};
     }
 }

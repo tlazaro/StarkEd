@@ -63,17 +63,13 @@ class MapScreen(val starkMap: StarkMap) extends Screen {
   }
   
   var postUpdate: Option[JSON.ParseResult[Any]] = None
-  def postUpdate(parsed: JSON.ParseResult[Any]) {
-    postUpdate = Some(parsed)
+  def postUpdate(text: String) {
+    postUpdate = Some(JSON.parseText(text))
   }
   
   var postListener: Option[MapListener] = None
   def postMapListener(listener: MapListener) {
     postListener = Some(listener)
-  }
-  
-  def getCurrentTool: Tool = {
-    Brush(0)
   }
   
   class InputTest extends InputAdapter {
@@ -105,7 +101,7 @@ class MapScreen(val starkMap: StarkMap) extends Screen {
       cursor.y = tmp.y
       
       if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
-        starkMap.applyTool(tmp.x, tmp.y, getCurrentTool)
+        starkMap.applyTool(tmp.x, tmp.y, starkMap.getCurrentTool)
       } else {
         false
       }
@@ -116,7 +112,7 @@ class MapScreen(val starkMap: StarkMap) extends Screen {
         case Input.Buttons.LEFT => {
             screenToCanvas(x, y, tmp)
             if (starkMap != null) {
-              starkMap.applyTool(tmp.x, tmp.y, getCurrentTool)
+              starkMap.applyTool(tmp.x, tmp.y, starkMap.getCurrentTool)
             }  else {
               false
             }

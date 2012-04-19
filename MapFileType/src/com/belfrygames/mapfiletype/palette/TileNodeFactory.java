@@ -1,9 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.belfrygames.mapfiletype.palette;
 
+import java.awt.Image;
 import java.util.List;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -14,29 +11,24 @@ import org.openide.nodes.Node;
  */
 public class TileNodeFactory extends ChildFactory<String> {
 
-    private String tileset;
+    private TileSetNode.TileSetWrapper tileset;
 
-    public TileNodeFactory(String tileset) {
+    public TileNodeFactory(TileSetNode.TileSetWrapper tileset) {
         this.tileset = tileset;
     }
 
     @Override
     protected boolean createKeys(List<String> toPopulate) {
-        toPopulate.add(tileset);
+        toPopulate.add(tileset.getName());
         return true;
     }
 
     @Override
     protected Node[] createNodesForKey(String key) {
-        return new Node[]{
-                    new TileNode(
-                    new Tile("Pasto",
-                    "com/belfrygames/mapfiletype/palette/pasto_small.png",
-                    "com/belfrygames/mapfiletype/palette/pasto.png")),
-                    new TileNode(
-                    new Tile("Montaña",
-                    "com/belfrygames/mapfiletype/palette/montania_small.png",
-                    "com/belfrygames/mapfiletype/palette/montania.png"))
-                };
+        Node[] nodes = new Node[tileset.tilesCount()];
+        for (int i = 0; i < nodes.length; i++) {
+            nodes[i] = new TileNode(new Tile(i, tileset.getName(), tileset.getTile(i).getScaledInstance(32, 32, Image.SCALE_FAST), tileset.getTile(i)));
+        }
+        return nodes;
     }
 }

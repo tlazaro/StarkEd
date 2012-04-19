@@ -16,6 +16,10 @@ class Layer(val name: String, private var width: Int, private var height: Int, v
     }
   }
   
+  def valueAt(x: Int, y: Int): Int = {
+    tiles(y)(x)
+  }
+  
   def update(x: Int, y: Int, tile: Int) {
     tiles(y)(x) = tile
   }

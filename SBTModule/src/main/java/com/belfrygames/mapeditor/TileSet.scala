@@ -11,6 +11,6 @@ object TileSet {
 
 class TileSet(val tiles: IndexedSeq[Tile]) {
   def apply(id: Int) = {
-    tiles(id)
+    if (id < 0) null else tiles(id)
   }
 }

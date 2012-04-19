@@ -2,11 +2,10 @@ package com.belfrygames.mapfiletype;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglMultiCanvas;
-import com.belfrygames.mapeditor.JSON;
 import com.belfrygames.mapeditor.MapListener;
 import com.belfrygames.mapeditor.StarkMap;
-import com.belfrygames.mapfiletype.actions.BrushAction;
-import com.belfrygames.mapfiletype.actions.BucketFillAction;
+import com.belfrygames.mapfiletype.actions.ToolAction;
+import com.belfrygames.mapfiletype.actions.ToolInterface;
 import com.belfrygames.mapfiletype.palette.TileNode;
 import com.belfrygames.mapfiletype.palette.TilePaletteActions;
 import com.belfrygames.mapfiletype.palette.TileSetNodeFactory;
@@ -77,11 +76,12 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
         toolbar = new JToolBar();
         toolbar.addSeparator();
         ButtonGroup group = new ButtonGroup();
-        group.add((JToggleButton) toolbar.add(new JToggleButton(new BrushAction(lkp))));
-        group.add((JToggleButton) toolbar.add(new JToggleButton(new BucketFillAction(lkp))));
+        for(ToolInterface tool : lkp.lookupResult(ToolInterface.class).allInstances()) {
+            group.add((JToggleButton) toolbar.add(new JToggleButton(new ToolAction(lkp, tool))));
+        }
         toolbar.setFloatable(false);
-
-        Node root = new AbstractNode(Children.create(new TileSetNodeFactory(), false));
+        
+        Node root = new AbstractNode(Children.create(new TileSetNodeFactory(obj), false));
         PaletteActions paletteActions = new TilePaletteActions();
 
         final PaletteController paletteController = PaletteFactory.createPalette(root, paletteActions);
@@ -95,7 +95,7 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
                     if (null != selItem) {
                         TileNode selNode = selItem.lookup(TileNode.class);
                         if (null != selNode) {
-                            System.out.println("Selected node: " + selNode.getDisplayName());
+                            obj.getModel().setCurrentTileId(selNode.getId());
                         }
                     }
                 }
@@ -127,12 +127,6 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
             }
         }
 
-        private void updateTableModel() {
-            if (editorapp != null && editorapp.getMapScreen().getStarkMap() != null) {
-//                obj.getModel().setMap(editorapp.getMapScreen().getStarkMap());
-            }
-        }
-
         @Override
         public synchronized void mapChanged(final StarkMap map) {
             final MapFileEditorElement editor = obj.getLookup().lookup(MapFileEditorElement.class);
@@ -142,7 +136,6 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
                 public void run() {
                     final String serializeText = map.serializeText();
                     editor.getEditorPane().setText(serializeText);
-                    updateTableModel();
                     text = serializeText;
                 }
             });
@@ -150,8 +143,7 @@ public class MapFileVisualElement2 extends JPanel implements MultiViewElement {
 
         private void refresh(String fileText) {
             if (editorapp != null) {
-                editorapp.getMapScreen().postUpdate(JSON.parseText(fileText));
-                updateTableModel();
+                editorapp.getMapScreen().postUpdate(fileText);
                 text = fileText;
             }
         }

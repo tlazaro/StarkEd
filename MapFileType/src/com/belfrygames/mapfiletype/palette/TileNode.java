@@ -32,6 +32,10 @@ public class TileNode extends AbstractNode {
     }
 
     private String getLabel() {
+        return tile.getName();
+    }
+    
+    public int getId() {
         return tile.getId();
     }
 }
