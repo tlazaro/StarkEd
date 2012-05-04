@@ -14,10 +14,12 @@
         </exec>
     </target>
 
+    <!--TODO add ${cp.extra}"/>-->
     <target name="compile" description="Compile project." depends="init,up-to-date">
         <mkdir dir="${build.classes.dir}"/>
         <exec dir="${basedir}" executable="${sbt}" failonerror="true">
-            <arg value=";compile"></arg>
+            <arg value=";set unmanagedJars in Compile := (&quot;${module.classpath}&quot;.split(':') map file).toList.classpath"/>
+            <arg value=";compile"/>
         </exec>
         <copy todir="${build.classes.dir}">
             <fileset dir="${basedir}/target/scala-2.9.1/classes" excludes="${jar-excludes}"/>
@@ -41,7 +43,7 @@
     
     <target name="run" description="Run a main class.">
         <echo>You must set the main class for the main 'run' task. Change Compile to Test to set it for 'test:run': 
-        mainClass in (Compile, run) := Some({main.class})
+            mainClass in (Compile, run) := Some({main.class})
         </echo>
         <exec dir="${basedir}" executable="${sbt}">
             <arg value=";run"></arg>

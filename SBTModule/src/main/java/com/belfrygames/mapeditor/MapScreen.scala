@@ -24,7 +24,7 @@ class MapScreen(val starkMap: StarkMap) extends Screen {
     if (starkMap == null) {
       new java.awt.Dimension(200, 200)
     } else {
-      new java.awt.Dimension(starkMap.tileWidth * starkMap.width, starkMap.tileHeight * starkMap.height)
+      new java.awt.Dimension(starkMap.width.toInt, starkMap.height.toInt)
     }
   }
   
@@ -34,14 +34,13 @@ class MapScreen(val starkMap: StarkMap) extends Screen {
     Screen.DEBUG = true
     Screen.SHOW_KEYS = false
     
-    app.resizePolicy = OriginalCanvas
+    app.resizePolicy = Original
     app.resize(Gdx.graphics.getWidth, Gdx.graphics.getHeight)
     
-    addSprite(cursor)
+    foreground.add(cursor, "cursor")
     cursor.setOrigin(0.5f, 0.5f)
     
-    regularCam.addDrawable(starkMap)
-    addUpdateable(starkMap)
+    foreground.add(starkMap, "starkMap")
     
     starkMap.fromTexture(Resources.split("com/belfrygames/mapeditor/terrenos.png", starkMap.tileWidth, starkMap.tileHeight, 1, 2, false, false))
     

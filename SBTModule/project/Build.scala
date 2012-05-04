@@ -1,8 +1,9 @@
 import sbt._
 import sbt.Keys._
 import sbt.Package.ManifestAttributes
+import sbt.Build._
 
-object SBTModuleBuild extends Build { 
+object SBTModuleBuild extends Build {
   val sharedSettings = Seq[Setting[_]](
     resolvers += "cloudbees snapshots" at "https://repository-belfry.forge.cloudbees.com/snapshot",
     credentials += {
@@ -24,8 +25,8 @@ object SBTModuleBuild extends Build {
         ms filter { case (file, toPath) =>
             file.getName.endsWith(".properties") || file.getName.endsWith(".class")
         }
-      },
+      }
       
-      libraryDependencies += "starkengine" %% "starkengine" % "0.1-SNAPSHOT"
+      //libraryDependencies += "starkengine" %% "starkengine" % "0.1-SNAPSHOT"
     ): _*)
 }

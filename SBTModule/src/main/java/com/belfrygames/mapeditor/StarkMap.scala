@@ -3,19 +3,12 @@ package com.belfrygames.mapeditor
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType
-import com.belfrygames.starkengine.core.DrawableParent
-import com.belfrygames.starkengine.core.Resources
-import com.belfrygames.starkengine.core.UpdateableParent
+import com.belfrygames.starkengine.core.{Node, Resources}
 import com.belfrygames.starkengine.tags._
-import java.awt.datatransfer.DataFlavor
-import java.awt.datatransfer.Transferable
-import java.awt.datatransfer.UnsupportedFlavorException
+import java.awt.datatransfer.{DataFlavor, Transferable, UnsupportedFlavorException}
 import java.io.IOException
-import javax.swing.JComponent
-import javax.swing.JTable
-import javax.swing.TransferHandler
-import javax.swing.event.TableModelEvent
-import javax.swing.event.TableModelListener
+import javax.swing.{JComponent, JTable, TransferHandler}
+import javax.swing.event.{TableModelEvent, TableModelListener}
 import javax.swing.table.TableModel
 import scala.collection.mutable.ListBuffer
 
@@ -48,8 +41,8 @@ object StarkMap {
                   if (result == null) {
                     result = new StarkMap(w.toInt, h.toInt, tWidth.toInt, tHeight.toInt)
                   } else {
-                    result.width = w.toInt
-                    result.height = h.toInt
+                    result.cols = w.toInt
+                    result.rows = h.toInt
                     result.tileWidth = tWidth.toInt
                     result.tileHeight = tHeight.toInt
                   }
@@ -83,7 +76,7 @@ object StarkMap {
 class StarkMap(private var width0: Int,
                private var height0: Int,
                var tileWidth: Int,
-               var tileHeight: Int) extends DrawableParent with UpdateableParent with TableModel {
+               var tileHeight: Int) extends Node with TableModel {
   private var tileSet: TileSet = null
   private var tileSetName: String = null
   
@@ -99,15 +92,18 @@ class StarkMap(private var width0: Int,
     fireMapChanged()
   }
   
-  def width = width0
-  def width_=(value: Int) {
+  def cols = width0
+  def cols_=(value: Int) {
     width0 = value
   }
     
-  def height: Int = height0
-  def height_=(value: Int) {
+  def rows: Int = height0
+  def rows_=(value: Int) {
     height0 = value
   }
+  
+  override def width = cols * tileWidth
+  override def height = rows * tileHeight
   
   var layers = new ListBuffer[Layer]()
   
@@ -167,8 +163,7 @@ class StarkMap(private var width0: Int,
   
   def clearLayers() = {
     for (layer <- layers) {
-      removeDrawable(layer)
-      removeUpdateable(layer)
+      remove(layer)
     }
     layers.clear()
   }
@@ -180,13 +175,12 @@ class StarkMap(private var width0: Int,
       layers.insert(at, layer)
     }
     
-    addDrawable(layer)
-    addUpdateable(layer)
+    add(layer, layer.name)
     layer
   }
   
   def addLayer(name: String, at: Int = -1): Layer = {
-    val layer = new Layer(name, width, height, tileWidth, tileHeight, null)
+    val layer = new Layer(name, cols, rows, tileWidth, tileHeight, null)
     addLayer(layer, at)
   }
   
@@ -219,8 +213,7 @@ class StarkMap(private var width0: Int,
   
   def removeLayer(at: Int): Layer = {
     val layer = layers.remove(at)
-    removeDrawable(layer)
-    removeUpdateable(layer)
+    remove(layer)
     layer
   }
   
@@ -263,9 +256,9 @@ class StarkMap(private var width0: Int,
   
   def applyTool(x: Float, y: Float, tool: Tool): Boolean = {
     var change = false
-    if ((0 <= x && x < tileWidth * width) && (0 <= y && y < tileHeight * height)) {
+    if ((0 <= x && x < tileWidth * cols) && (0 <= y && y < tileHeight * rows)) {
       val xCoord = (x / tileWidth).toInt
-      val yCoord = height - 1 - (y / tileHeight).toInt
+      val yCoord = rows - 1 - (y / tileHeight).toInt
     
       tool match {
         case Brush => {
@@ -304,18 +297,18 @@ class StarkMap(private var width0: Int,
     renderer.setColor(1f, 1f, 1f, 1f)
     renderer.begin(ShapeType.Line)
     renderer.identity()
-    for(x <- Range(0, width * tileWidth, tileWidth).inclusive) {
-      renderer.line(x, 0, x, height * tileHeight)
+    for(x <- Range(0, cols * tileWidth, tileWidth).inclusive) {
+      renderer.line(x, 0, x, rows * tileHeight)
     }
-    for(y <- Range(0, height * tileHeight, tileHeight).inclusive) {
-      renderer.line(0, y, width * tileWidth, y)
+    for(y <- Range(0, rows * tileHeight, tileHeight).inclusive) {
+      renderer.line(0, y, cols * tileWidth, y)
     }
     renderer.end()
   }
   
   private def resizeLayers() {
     for(layer <- layers) {
-      layer.resize(width, height)
+      layer.resize(cols, rows)
     }
   }
   
